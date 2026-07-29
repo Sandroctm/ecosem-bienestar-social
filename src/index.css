@@ -1,0 +1,58 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #090d16;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #2b3548;
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #d9a700;
+  }
+}
+
+.glass-panel {
+  background: rgba(17, 24, 39, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glass-card {
+  background: rgba(31, 41, 55, 0.6);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(217, 167, 0, 0.15);
+  transition: all 0.2s ease-in-out;
+}
+
+.glass-card:hover {
+  border-color: rgba(217, 167, 0, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px -5px rgba(217, 167, 0, 0.1);
+}
+
+.gold-gradient-text {
+  background: linear-gradient(135deg, #FFE866 0%, #D9A700 50%, #996F00 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.gold-button {
+  background: linear-gradient(135deg, #E6B800 0%, #B38600 100%);
+  color: #0F172A;
+  font-weight: 700;
+  transition: all 0.2s ease;
+}
+
+.gold-button:hover {
+  background: linear-gradient(135deg, #FFD000 0%, #D9A700 100%);
+  box-shadow: 0 4px 15px rgba(217, 167, 0, 0.35);
+}
