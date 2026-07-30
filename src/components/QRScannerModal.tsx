@@ -19,7 +19,7 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({
   onScanSuccess,
 }) => {
   const [activeTab, setActiveTab] = useState<'camera' | 'virtual'>('camera');
-  const [selectedService, setSelectedService] = useState<'Almuerzo' | 'Cena' | 'Alojamiento' | 'Ingreso Campamento' | 'Desayuno'>('Almuerzo');
+  const [selectedService, setSelectedService] = useState<'Almuerzo' | 'Cena' | 'Alojamiento' | 'Ingreso Campamento' | 'Desayuno'>('Ingreso Campamento');
   const [lastScannedWorker, setLastScannedWorker] = useState<Worker | null>(null);
   const [manualDni, setManualDni] = useState('');
   const [feedbackMsg, setFeedbackMsg] = useState<string | null>(null);
@@ -167,21 +167,23 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({
         {/* Service Type Selector */}
         <div>
           <label className="block text-xs font-bold text-amber-400 uppercase tracking-wider mb-1.5">
-            Seleccionar Tipo de Servicio / Marcación:
+            Tipo de Marcación Seleccionada:
           </label>
-          <div className="grid grid-cols-3 sm:grid-cols-5 gap-1.5">
-            {(['Desayuno', 'Almuerzo', 'Cena', 'Alojamiento', 'Ingreso Campamento'] as const).map((service) => (
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-1.5">
+            {(['Ingreso Campamento', 'Alojamiento', 'Almuerzo'] as const).map((service) => (
               <button
                 key={service}
                 type="button"
                 onClick={() => setSelectedService(service)}
-                className={`py-2 px-1 text-[11px] font-bold rounded-lg border transition-all text-center ${
+                className={`py-2.5 px-2 text-xs font-black rounded-xl border transition-all text-center flex items-center justify-center gap-1.5 ${
                   selectedService === service
-                    ? 'bg-amber-500 text-slate-950 border-amber-400 shadow-md shadow-amber-500/20'
-                    : 'bg-slate-950 border-slate-800 text-slate-300 hover:border-amber-500/40'
+                    ? 'bg-amber-500 text-slate-950 border-amber-400 shadow-lg shadow-amber-500/20 scale-[1.02]'
+                    : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-amber-500/40'
                 }`}
               >
-                {service}
+                {service === 'Ingreso Campamento' && <span>🚪 Ingreso Campamento</span>}
+                {service === 'Alojamiento' && <span>🛏️ Alojamiento</span>}
+                {service === 'Almuerzo' && <span>🍽️ Comedor</span>}
               </button>
             ))}
           </div>
