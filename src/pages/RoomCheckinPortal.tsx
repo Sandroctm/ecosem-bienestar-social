@@ -246,8 +246,11 @@ export const RoomCheckinPortal: React.FC<RoomCheckinPortalProps> = ({
                     const selectedDni = e.target.value;
                     if (!selectedDni) return;
                     setDniInput(selectedDni);
+                    const worker = workers.find((w) => w.dni === selectedDni);
                     const lastLog = attendanceRecords.find((r) => r.workerDni === selectedDni && r.roomNumber);
-                    if (lastLog?.roomNumber) {
+                    if (worker?.roomNumber) {
+                      setRoomInput(worker.roomNumber);
+                    } else if (lastLog?.roomNumber) {
                       setRoomInput(lastLog.roomNumber);
                     }
                   }}

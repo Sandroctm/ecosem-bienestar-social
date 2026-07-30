@@ -37,6 +37,7 @@ export const WorkersManagementPage: React.FC<WorkersManagementPageProps> = ({
   const [company, setCompany] = useState('');
   const [role, setRole] = useState('');
   const [camp, setCamp] = useState('');
+  const [roomNumber, setRoomNumber] = useState('');
   const [phoneWhatsApp, setPhoneWhatsApp] = useState('51987654321');
   const [photoBase64, setPhotoBase64] = useState<string>('');
 
@@ -72,6 +73,7 @@ export const WorkersManagementPage: React.FC<WorkersManagementPageProps> = ({
       company: company.trim(),
       role: role.trim(),
       camp: camp.trim(),
+      roomNumber: roomNumber.trim() || undefined,
       photoUrl: photoBase64 || defaultPhoto,
       phoneWhatsApp: phoneWhatsApp.trim(),
       status: 'Activo',
@@ -86,6 +88,7 @@ export const WorkersManagementPage: React.FC<WorkersManagementPageProps> = ({
     setCompany('');
     setRole('');
     setCamp('');
+    setRoomNumber('');
     setPhoneWhatsApp('51987654321');
     setPhotoBase64('');
   };
@@ -198,20 +201,31 @@ export const WorkersManagementPage: React.FC<WorkersManagementPageProps> = ({
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs">
             
             {/* MANUAL CAMP ENTRY REQUIREMENT */}
             <div>
               <label className="block text-slate-400 font-semibold mb-1">
-                Nombre del Campamento Minero (Ingreso Manual) *:
+                Nombre del Campamento Minero *:
               </label>
               <input
                 type="text"
                 value={camp}
                 onChange={(e) => setCamp(e.target.value)}
-                placeholder="Ej: Campamento Norte - Las Bambas / Campamento Cotabambas"
+                placeholder="Ej: Campamento Norte / Central"
                 className="w-full p-2.5 bg-slate-950 border border-amber-500/40 rounded-lg text-slate-100 focus:outline-none focus:border-amber-400 font-bold"
                 required
+              />
+            </div>
+
+            <div>
+              <label className="block text-slate-400 font-semibold mb-1">N° Habitación / Cuarto (Asignar):</label>
+              <input
+                type="text"
+                value={roomNumber}
+                onChange={(e) => setRoomNumber(e.target.value)}
+                placeholder="Ej: HAB. 502 / A-204"
+                className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-lg text-amber-300 font-bold focus:outline-none focus:border-amber-500 uppercase"
               />
             </div>
 
@@ -302,6 +316,7 @@ export const WorkersManagementPage: React.FC<WorkersManagementPageProps> = ({
                   <th className="p-3">Empresa Contratista</th>
                   <th className="p-3">Cargo / Rol</th>
                   <th className="p-3">Campamento</th>
+                  <th className="p-3">N° Cuarto</th>
                   <th className="p-3">WhatsApp</th>
                   <th className="p-3 text-center">Fotocheck QR</th>
                   <th className="p-3 text-center">Acciones</th>
@@ -322,6 +337,7 @@ export const WorkersManagementPage: React.FC<WorkersManagementPageProps> = ({
                     <td className="p-3 text-slate-300">{w.company}</td>
                     <td className="p-3 text-amber-300 font-medium">{w.role}</td>
                     <td className="p-3 text-slate-400 font-bold">{w.camp}</td>
+                    <td className="p-3 font-bold text-amber-400">{w.roomNumber || '—'}</td>
                     <td className="p-3 font-mono text-slate-400">{w.phoneWhatsApp}</td>
                     <td className="p-3 text-center">
                       <button

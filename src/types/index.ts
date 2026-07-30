@@ -23,6 +23,7 @@ export interface Worker {
   company: string;
   role: string;
   camp: string;
+  roomNumber?: string;
   photoUrl: string; // Base64 or Image URL
   phoneWhatsApp: string;
   status: 'Activo' | 'Inactivo';
