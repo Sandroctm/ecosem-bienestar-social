@@ -238,6 +238,15 @@
     border: none !important;
     padding: 1cm !important;
   }
+
+  /* Specific print styles for Fotocheck (85mm x 54mm standard card format) */
+  .fotocheck-printable {
+    box-shadow: none !important;
+    margin: 2cm auto !important;
+    border: 3px solid #047857 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
 }
 
 /* Staggered animation delays for lists */

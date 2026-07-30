@@ -17,56 +17,79 @@ export const QRBadgeGenerator: React.FC<QRBadgeGeneratorProps> = ({ worker, onCl
   };
 
   return (
-    <div className="bg-slate-900 border border-emerald-500/30 rounded-2xl p-6 text-slate-100 max-w-sm mx-auto shadow-2xl relative overflow-hidden">
+    <div className="bg-slate-900 border border-emerald-500/30 rounded-2xl p-6 text-slate-100 max-w-md mx-auto shadow-2xl relative overflow-hidden">
       <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none" />
 
-      {/* Printable Badge Container */}
-      <div ref={badgeRef} className="bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 p-5 rounded-2xl border-2 border-emerald-500/50 text-center space-y-4 shadow-inner">
-        
-        {/* Badge Header with Official Logo */}
-        <div className="bg-white p-2 rounded-xl border border-emerald-500 shadow-md">
-          <img
-            src="/ecosem-logo.png"
-            alt="ECOSEM PUCARA-MOROCOCHA"
-            className="h-12 w-auto mx-auto object-contain"
-          />
-        </div>
-
-        <div className="flex items-center justify-between border-b border-emerald-500/20 pb-2">
-          <span className="text-[10px] uppercase font-black tracking-widest text-emerald-400">
-            PASE DIGITAL DE CAMPAMENTO
-          </span>
-          <span className="text-[10px] font-extrabold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+      {/* Printable Badge Container (Fotocheck Estándar Minero 85mm x 54mm) */}
+      <div 
+        ref={badgeRef} 
+        className="fotocheck-printable bg-white text-slate-900 rounded-2xl border-4 border-emerald-600 p-4 space-y-3 shadow-2xl relative overflow-hidden mx-auto max-w-[340px]"
+      >
+        {/* Top Header Bar */}
+        <div className="bg-emerald-700 -mx-4 -mt-4 p-3 text-white flex items-center justify-between border-b-2 border-amber-400">
+          <div className="flex items-center gap-2">
+            <div className="bg-white p-1 rounded-md shadow-sm">
+              <img
+                src="/ecosem-logo.png"
+                alt="ECOSEM"
+                className="h-7 w-auto object-contain"
+              />
+            </div>
+            <div>
+              <div className="text-[11px] font-black tracking-wider leading-tight">ECOSEM PUCARA-MOROCOCHA</div>
+              <div className="text-[8px] text-amber-300 font-bold uppercase tracking-widest">PASE OFICIAL DE CAMPAMENTO</div>
+            </div>
+          </div>
+          <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded bg-emerald-900 text-amber-300 border border-amber-400">
             {worker.status}
           </span>
         </div>
 
-        {/* Worker Photo & Details */}
-        <div className="flex flex-col items-center">
-          <div className="w-24 h-24 rounded-xl border-2 border-emerald-400 overflow-hidden shadow-md mb-2 p-1 bg-slate-800">
-            <img src={worker.photoUrl} alt={worker.fullName} className="w-full h-full object-cover rounded-lg" />
+        {/* Worker Main Card Content */}
+        <div className="flex items-center gap-3 pt-1">
+          {/* Worker Photo */}
+          <div className="w-20 h-24 rounded-xl border-2 border-emerald-600 overflow-hidden shadow-md shrink-0 bg-slate-100">
+            <img src={worker.photoUrl} alt={worker.fullName} className="w-full h-full object-cover" />
           </div>
-          <h3 className="font-extrabold text-base text-slate-100 leading-tight">{worker.fullName}</h3>
-          <p className="text-xs text-emerald-400 font-bold">{worker.role}</p>
-          <p className="text-[11px] text-slate-400 mt-0.5">{worker.company}</p>
+
+          {/* Details */}
+          <div className="min-w-0 flex-1 space-y-1">
+            <h3 className="font-black text-sm text-slate-900 leading-tight uppercase truncate">{worker.fullName}</h3>
+            <p className="text-[11px] text-emerald-800 font-extrabold uppercase truncate">{worker.role}</p>
+            <p className="text-[10px] text-slate-600 font-bold truncate">{worker.company}</p>
+            
+            <div className="pt-1 flex flex-wrap gap-1">
+              <span className="text-[9px] font-mono font-bold bg-slate-100 text-slate-800 px-1.5 py-0.5 rounded border border-slate-300">
+                DNI: <strong>{worker.dni}</strong>
+              </span>
+              {worker.roomNumber && (
+                <span className="text-[9px] font-mono font-black bg-amber-100 text-amber-900 px-1.5 py-0.5 rounded border border-amber-400">
+                  CUARTO: {worker.roomNumber}
+                </span>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* QR Code Container */}
-        <div className="bg-white p-3 rounded-xl inline-block shadow-lg border-2 border-emerald-500 my-1">
-          <QRCodeSVG value={`${getQrBaseUrl()}/?action=room-checkin&dni=${worker.dni}`} size={140} level="H" includeMargin={false} />
+        <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-300 flex items-center justify-between gap-3">
+          <div className="bg-white p-1.5 rounded-lg border border-slate-300 shadow-sm shrink-0">
+            <QRCodeSVG value={`${getQrBaseUrl()}/?action=room-checkin&dni=${worker.dni}`} size={110} level="H" includeMargin={false} />
+          </div>
+
+          <div className="text-[9px] text-slate-600 font-semibold space-y-1 flex-1 text-right">
+            <div className="font-extrabold text-emerald-800 uppercase flex items-center justify-end gap-1">
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-700" />
+              <span>Verificación QR</span>
+            </div>
+            <p className="leading-tight">Escanea este código con el móvil para registrar asistencia e ingreso a habitación.</p>
+            <div className="text-[8px] font-mono font-bold text-slate-500 pt-0.5">{worker.camp}</div>
+          </div>
         </div>
 
-        <div className="text-[10px] text-emerald-400 font-extrabold uppercase tracking-wide">
-          📷 Escanear con móvil para marcar llegada
-        </div>
-
-        <div className="text-[11px] font-mono text-slate-300 bg-slate-950 py-1.5 px-3 rounded-lg border border-slate-800">
-          DNI: <span className="font-bold text-emerald-400">{worker.dni}</span> | {worker.camp}
-        </div>
-
-        <div className="flex items-center justify-center gap-1.5 text-[10px] text-slate-400 font-semibold">
-          <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-          <span>Verificado por ECOSEM PUCARA-MOROCOCHA</span>
+        {/* Footer */}
+        <div className="text-[8px] text-center font-bold uppercase tracking-wider text-slate-500 border-t border-slate-200 pt-1.5">
+          ECOSEM PUCARA-MOROCOCHA • FOTOCHECK OFICIAL PERMANENTE
         </div>
       </div>
 
@@ -74,10 +97,10 @@ export const QRBadgeGenerator: React.FC<QRBadgeGeneratorProps> = ({ worker, onCl
       <div className="mt-5 flex gap-2 no-print">
         <button
           onClick={handlePrintBadge}
-          className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-800 text-white text-xs font-bold shadow-md hover:from-emerald-500 hover:to-emerald-700"
+          className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl gold-button text-xs font-black shadow-md"
         >
           <Download className="w-4 h-4" />
-          Imprimir / Guardar Fotocheck
+          Imprimir / Guardar Fotocheck (PDF)
         </button>
 
         {onClose && (
