@@ -2,6 +2,7 @@ import React, { useRef } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { Worker } from '../types';
 import { Download, ShieldCheck } from 'lucide-react';
+import { getQrBaseUrl } from '../App';
 
 interface QRBadgeGeneratorProps {
   worker: Worker;
@@ -52,7 +53,7 @@ export const QRBadgeGenerator: React.FC<QRBadgeGeneratorProps> = ({ worker, onCl
 
         {/* QR Code Container */}
         <div className="bg-white p-3 rounded-xl inline-block shadow-lg border-2 border-emerald-500 my-1">
-          <QRCodeSVG value={`${window.location.origin}/?action=room-checkin&dni=${worker.dni}`} size={140} level="H" includeMargin={false} />
+          <QRCodeSVG value={`${getQrBaseUrl()}/?action=room-checkin&dni=${worker.dni}`} size={140} level="H" includeMargin={false} />
         </div>
 
         <div className="text-[10px] text-emerald-400 font-extrabold uppercase tracking-wide">

@@ -3,6 +3,7 @@ import { Html5QrcodeScanner } from 'html5-qrcode';
 import { QRCodeSVG } from 'qrcode.react';
 import { X, CheckCircle2, QrCode, Smartphone, Sparkles, UserCheck, Camera, Layers } from 'lucide-react';
 import { Worker } from '../types';
+import { getQrBaseUrl } from '../App';
 
 interface QRScannerModalProps {
   workers: Worker[];
@@ -211,7 +212,7 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({
         {/* MODE 2: Virtual QR Code generator & direct scanner */}
         {activeTab === 'virtual' && (
           <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 text-center space-y-4">
-            {workers.length > 0 && (
+            {workers.length > 0 ? (
               <div>
                 <label className="block text-xs text-slate-400 font-bold mb-1">
                   Seleccionar Trabajador para mostrar su QR:
@@ -231,12 +232,31 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({
                   ))}
                 </select>
               </div>
+            ) : (
+              <div className="bg-rose-500/10 border border-rose-500/30 p-3 rounded-xl text-left space-y-1">
+                <p className="text-xs font-bold text-rose-400 flex items-center gap-1">
+                  ⚠️ Padrón Vacío
+                </p>
+                <p className="text-[11px] text-slate-400">
+                  No hay personal registrado para generar QRs. Ve al módulo <strong>Gestión de Personal</strong> y añade trabajadores o carga los datos Demo.
+                </p>
+              </div>
+            )}
+
+            {/* Aviso de Localhost */}
+            {window.location.hostname === 'localhost' && (
+              <div className="bg-amber-500/10 border border-amber-500/30 p-2.5 rounded-xl text-left space-y-1">
+                <p className="text-[10px] font-bold text-amber-400">⚠️ Probando en Localhost</p>
+                <p className="text-[10px] text-amber-200/70">
+                  El QR apunta a "localhost". Si escaneas este QR con tu <strong>celular</strong> no funcionará porque el celular no encontrará la web. Para que el celular lo lea, debes entrar a esta PC usando su IP (ej: <code>http://192.168.1.X:5173</code>) o subir la página a Vercel.
+                </p>
+              </div>
             )}
 
             {/* Generated QR Code display */}
             <div className="bg-white p-4 rounded-2xl inline-block shadow-xl border-4 border-amber-400">
               <QRCodeSVG
-                value={currentVirtualWorker ? `${window.location.origin}/?action=room-checkin&dni=${currentVirtualWorker.dni}` : `${window.location.origin}/?action=room-checkin&dni=${manualDni || '45892011'}`}
+                value={currentVirtualWorker ? `${getQrBaseUrl()}/?action=room-checkin&dni=${currentVirtualWorker.dni}` : `${getQrBaseUrl()}/?action=room-checkin&dni=${manualDni || '45892011'}`}
                 size={180}
                 level="H"
               />

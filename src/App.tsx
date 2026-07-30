@@ -17,6 +17,8 @@ import {
   INITIAL_MICROCREDITS,
   INITIAL_AUDIT_LOGS,
   DEMO_WORKERS,
+  DEMO_ATTENDANCE,
+  DEMO_BENEFIT_REQUESTS,
 } from './utils/mockData';
 
 // Pages
@@ -59,6 +61,24 @@ const loadFromStorage = <T,>(key: string, defaultValue: T): T => {
     }
   }
   return defaultValue;
+};
+
+/**
+ * Returns the base URL to use for QR codes.
+ * - If user configured a custom URL in localStorage, use that.
+ * - If running on localhost, try to use the Vercel production URL.
+ * - Otherwise use the current origin.
+ */
+export const getQrBaseUrl = (): string => {
+  const custom = localStorage.getItem('ecosem_qr_base_url');
+  if (custom) return custom.replace(/\/$/, '');
+  const origin = window.location.origin;
+  // If localhost, check if a production URL is saved
+  if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+    const vercelUrl = localStorage.getItem('ecosem_vercel_url');
+    if (vercelUrl) return vercelUrl.replace(/\/$/, '');
+  }
+  return origin;
 };
 
 export function App() {
@@ -120,6 +140,8 @@ export function App() {
 
   const handleLoadDemoData = () => {
     setWorkers(DEMO_WORKERS);
+    setAttendanceRecords(DEMO_ATTENDANCE);
+    setBenefitRequests(DEMO_BENEFIT_REQUESTS);
   };
 
   // Handlers for Extra Modules

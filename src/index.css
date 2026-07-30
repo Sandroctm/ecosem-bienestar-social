@@ -2,7 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ═══════════════════════════════════════════════════════════
+   ECOSEM PUCARA-MOROCOCHA — Design System CSS
+   Premium dark theme with gold accents
+   ═══════════════════════════════════════════════════════════ */
+
 @layer base {
+  /* Custom Scrollbar */
   ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
@@ -17,8 +23,21 @@
   ::-webkit-scrollbar-thumb:hover {
     background: #d9a700;
   }
+
+  /* Smooth scroll behavior */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Better focus ring for accessibility */
+  *:focus-visible {
+    outline: 2px solid #d9a700;
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
 }
 
+/* ─── Glass Panels ─── */
 .glass-panel {
   background: rgba(17, 24, 39, 0.75);
   backdrop-filter: blur(12px);
@@ -30,29 +49,166 @@
   background: rgba(31, 41, 55, 0.6);
   backdrop-filter: blur(8px);
   border: 1px solid rgba(217, 167, 0, 0.15);
-  transition: all 0.2s ease-in-out;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .glass-card:hover {
   border-color: rgba(217, 167, 0, 0.4);
   transform: translateY(-2px);
-  box-shadow: 0 10px 25px -5px rgba(217, 167, 0, 0.1);
+  box-shadow: 0 10px 25px -5px rgba(217, 167, 0, 0.1),
+              0 0 0 1px rgba(217, 167, 0, 0.05);
 }
 
+/* ─── Gold Gradient Text ─── */
 .gold-gradient-text {
   background: linear-gradient(135deg, #FFE866 0%, #D9A700 50%, #996F00 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
+/* ─── Gold Button (PRIMARY CTA) ─── */
 .gold-button {
   background: linear-gradient(135deg, #E6B800 0%, #B38600 100%);
   color: #0F172A;
   font-weight: 700;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.gold-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+  transition: left 0.5s ease;
 }
 
 .gold-button:hover {
   background: linear-gradient(135deg, #FFD000 0%, #D9A700 100%);
-  box-shadow: 0 4px 15px rgba(217, 167, 0, 0.35);
+  box-shadow: 0 4px 15px rgba(217, 167, 0, 0.35),
+              0 0 30px rgba(217, 167, 0, 0.1);
+  transform: translateY(-1px);
 }
+
+.gold-button:hover::before {
+  left: 100%;
+}
+
+.gold-button:active {
+  transform: translateY(0) scale(0.98);
+  box-shadow: 0 2px 8px rgba(217, 167, 0, 0.3);
+}
+
+/* ─── Keyframe Animations ─── */
+
+/* Fade in from bottom */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* Scale in */
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* Shimmer sweep for loading states */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, transparent 0%, rgba(217,167,0,0.08) 50%, transparent 100%);
+  background-size: 200% 100%;
+  animation: shimmer 2s ease-in-out infinite;
+}
+
+/* Soft pulse glow */
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(217, 167, 0, 0); }
+  50% { box-shadow: 0 0 20px 4px rgba(217, 167, 0, 0.15); }
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 2s ease-in-out infinite;
+}
+
+/* Success checkmark pop */
+@keyframes successPop {
+  0% { transform: scale(0); opacity: 0; }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.animate-success-pop {
+  animation: successPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+/* Slide in from right */
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-slide-in-right {
+  animation: slideInRight 0.3s ease-out forwards;
+}
+
+/* Gentle floating */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-4px); }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* ─── Utility Classes ─── */
+
+/* Hide on print */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+}
+
+/* Staggered animation delays for lists */
+.stagger-1 { animation-delay: 0.05s; }
+.stagger-2 { animation-delay: 0.1s; }
+.stagger-3 { animation-delay: 0.15s; }
+.stagger-4 { animation-delay: 0.2s; }
+.stagger-5 { animation-delay: 0.25s; }
