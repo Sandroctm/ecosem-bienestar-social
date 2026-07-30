@@ -197,12 +197,46 @@
   animation: float 3s ease-in-out infinite;
 }
 
-/* ─── Utility Classes ─── */
+/* ─── Utility Classes & Print Styles ─── */
 
-/* Hide on print */
+/* Styles exclusively for Print (PDF/Acta) */
 @media print {
-  .no-print {
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  .no-print,
+  nav,
+  header,
+  aside {
     display: none !important;
+  }
+
+  /* Make modal container white and full width when printing */
+  .fixed.inset-0 {
+    position: static !important;
+    background: #ffffff !important;
+    padding: 0 !important;
+    display: block !important;
+  }
+
+  .bg-slate-900,
+  .bg-slate-950 {
+    background: #ffffff !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: 100% !important;
+  }
+
+  .print-only {
+    display: block !important;
+    width: 100% !important;
+    box-shadow: none !important;
+    border: none !important;
+    padding: 1cm !important;
   }
 }
 
