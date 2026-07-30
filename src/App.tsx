@@ -134,6 +134,10 @@ export function App() {
     setWorkers([newWorker, ...workers]);
   };
 
+  const handleUpdateWorker = (updatedWorker: Worker) => {
+    setWorkers(workers.map((w) => (w.id === updatedWorker.id ? updatedWorker : w)));
+  };
+
   const handleDeleteWorker = (workerId: string) => {
     setWorkers(workers.filter((w) => w.id !== workerId));
   };
@@ -324,6 +328,7 @@ export function App() {
             <WorkersManagementPage
               workers={workers}
               onAddWorker={handleAddWorker}
+              onUpdateWorker={handleUpdateWorker}
               onDeleteWorker={handleDeleteWorker}
               onLoadDemoData={handleLoadDemoData}
             />

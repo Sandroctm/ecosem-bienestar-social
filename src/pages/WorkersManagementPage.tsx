@@ -18,6 +18,7 @@ import { exportToExcel } from '../utils/excelExport';
 interface WorkersManagementPageProps {
   workers: Worker[];
   onAddWorker: (worker: Worker) => void;
+  onUpdateWorker: (worker: Worker) => void;
   onDeleteWorker: (id: string) => void;
   onLoadDemoData: () => void;
 }
@@ -25,10 +26,12 @@ interface WorkersManagementPageProps {
 export const WorkersManagementPage: React.FC<WorkersManagementPageProps> = ({
   workers,
   onAddWorker,
+  onUpdateWorker,
   onDeleteWorker,
   onLoadDemoData,
 }) => {
   const [selectedWorkerForBadge, setSelectedWorkerForBadge] = useState<Worker | null>(null);
+  const [editingWorkerId, setEditingWorkerId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
 
   // Form State
@@ -53,6 +56,32 @@ export const WorkersManagementPage: React.FC<WorkersManagementPageProps> = ({
     }
   };
 
+  const handleStartEditWorker = (w: Worker) => {
+    setEditingWorkerId(w.id);
+    setDni(w.dni);
+    setFullName(w.fullName);
+    setCompany(w.company);
+    setRole(w.role);
+    setCamp(w.camp);
+    setRoomNumber(w.roomNumber || '');
+    setPhoneWhatsApp(w.phoneWhatsApp || '51987654321');
+    setPhotoBase64(w.photoUrl || '');
+    // Scroll form into view
+    window.scrollTo({ top: 100, behavior: 'smooth' });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingWorkerId(null);
+    setDni('');
+    setFullName('');
+    setCompany('');
+    setRole('');
+    setCamp('');
+    setRoomNumber('');
+    setPhoneWhatsApp('51987654321');
+    setPhotoBase64('');
+  };
+
   const handleSubmitNewWorker = (e: React.FormEvent) => {
     e.preventDefault();
     if (!dni || !fullName || !company || !role || !camp) {
@@ -66,21 +95,38 @@ export const WorkersManagementPage: React.FC<WorkersManagementPageProps> = ({
     // Default fallback photo if no device photo uploaded
     const defaultPhoto = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=250';
 
-    const newWorker: Worker = {
-      id: `W-${Date.now().toString().slice(-4)}`,
-      dni: cleanDni,
-      fullName: fullName.trim(),
-      company: company.trim(),
-      role: role.trim(),
-      camp: camp.trim(),
-      roomNumber: roomNumber.trim() || undefined,
-      photoUrl: photoBase64 || defaultPhoto,
-      phoneWhatsApp: phoneWhatsApp.trim(),
-      status: 'Activo',
-      qrCodeValue,
-    };
-
-    onAddWorker(newWorker);
+    if (editingWorkerId) {
+      const updatedWorker: Worker = {
+        id: editingWorkerId,
+        dni: cleanDni,
+        fullName: fullName.trim(),
+        company: company.trim(),
+        role: role.trim(),
+        camp: camp.trim(),
+        roomNumber: roomNumber.trim() || undefined,
+        photoUrl: photoBase64 || defaultPhoto,
+        phoneWhatsApp: phoneWhatsApp.trim(),
+        status: 'Activo',
+        qrCodeValue,
+      };
+      onUpdateWorker(updatedWorker);
+      setEditingWorkerId(null);
+    } else {
+      const newWorker: Worker = {
+        id: `W-${Date.now().toString().slice(-4)}`,
+        dni: cleanDni,
+        fullName: fullName.trim(),
+        company: company.trim(),
+        role: role.trim(),
+        camp: camp.trim(),
+        roomNumber: roomNumber.trim() || undefined,
+        photoUrl: photoBase64 || defaultPhoto,
+        phoneWhatsApp: phoneWhatsApp.trim(),
+        status: 'Activo',
+        qrCodeValue,
+      };
+      onAddWorker(newWorker);
+    }
 
     // Reset Form
     setDni('');
@@ -267,13 +313,22 @@ export const WorkersManagementPage: React.FC<WorkersManagementPageProps> = ({
             </div>
           </div>
 
-          <div className="flex justify-end pt-2">
+          <div className="flex justify-end gap-2 pt-2">
+            {editingWorkerId && (
+              <button
+                type="button"
+                onClick={handleCancelEdit}
+                className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition-all"
+              >
+                Cancelar Edición
+              </button>
+            )}
             <button
               type="submit"
               className="flex items-center gap-2 px-6 py-2.5 rounded-xl gold-button text-xs font-black shadow-lg"
             >
               <UserPlus className="w-4 h-4" />
-              Registrar Personal y Generar Fotocheck QR
+              {editingWorkerId ? 'Guardar Cambios del Personal' : 'Registrar Personal y Generar Fotocheck QR'}
             </button>
           </div>
         </form>
@@ -349,13 +404,22 @@ export const WorkersManagementPage: React.FC<WorkersManagementPageProps> = ({
                       </button>
                     </td>
                     <td className="p-3 text-center">
-                      <button
-                        onClick={() => onDeleteWorker(w.id)}
-                        className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 transition-colors"
-                        title="Eliminar registro"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
+                      <div className="flex items-center justify-center gap-1.5">
+                        <button
+                          onClick={() => handleStartEditWorker(w)}
+                          className="px-2.5 py-1.5 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/30 transition-colors font-bold text-xs flex items-center gap-1"
+                          title="Editar datos de este trabajador"
+                        >
+                          ✏️ Editar
+                        </button>
+                        <button
+                          onClick={() => onDeleteWorker(w.id)}
+                          className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 transition-colors"
+                          title="Eliminar registro"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
