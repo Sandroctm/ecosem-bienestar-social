@@ -4,8 +4,10 @@ import { AttendanceRecord } from '../types';
  * Sends a scanned attendance record to the configured Google Sheets Webhook.
  * Stores/retrieves the Webhook URL from localStorage.
  */
+const DEFAULT_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbydoY24Hyj8CSDqZqkS8QEIg3P0IkU2JDZDnYvPGq8ul1n0UU810gFM5Z4u6TR6qO2M/exec';
+
 export const getGoogleSheetsWebhookUrl = (): string => {
-  return localStorage.getItem('ecosem_sheets_webhook') || '';
+  return localStorage.getItem('ecosem_sheets_webhook') || DEFAULT_WEBHOOK_URL;
 };
 
 export const setGoogleSheetsWebhookUrl = (url: string): void => {
