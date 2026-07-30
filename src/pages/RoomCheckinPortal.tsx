@@ -236,16 +236,43 @@ export const RoomCheckinPortal: React.FC<RoomCheckinPortalProps> = ({
         {/* Manual entry / Input Form */}
         <form onSubmit={handleManualSubmit} className="space-y-4">
           <div className="space-y-3">
+            {workers.length > 0 && (
+              <div>
+                <label className="block text-[11px] text-slate-400 font-bold uppercase tracking-wider mb-1">
+                  Seleccionar Trabajador del Padrón:
+                </label>
+                <select
+                  onChange={(e) => {
+                    const selectedDni = e.target.value;
+                    if (!selectedDni) return;
+                    setDniInput(selectedDni);
+                    const lastLog = attendanceRecords.find((r) => r.workerDni === selectedDni && r.roomNumber);
+                    if (lastLog?.roomNumber) {
+                      setRoomInput(lastLog.roomNumber);
+                    }
+                  }}
+                  className="w-full px-3 py-2 text-xs bg-slate-950 border border-slate-800 rounded-xl text-slate-200 font-semibold"
+                >
+                  <option value="">-- Buscar por Nombre en Padrón --</option>
+                  {workers.map((w) => (
+                    <option key={w.id} value={w.dni}>
+                      {w.fullName} — DNI: {w.dni} ({w.company})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
             <div>
               <label className="block text-[11px] text-slate-400 font-bold uppercase tracking-wider mb-1">
-                Número de Habitación / Cuarto (Opcional):
+                Número de Habitación / Cuarto:
               </label>
               <input
                 type="text"
-                placeholder="Ej: A-204"
+                placeholder="Ej: HAB. 502"
                 value={roomInput}
                 onChange={(e) => setRoomInput(e.target.value)}
-                className="w-full px-3.5 py-2.5 text-xs bg-slate-950 border border-slate-800 rounded-xl text-slate-100 focus:outline-none focus:border-amber-500 font-bold placeholder-slate-600"
+                className="w-full px-3.5 py-2.5 text-xs bg-slate-950 border border-slate-800 rounded-xl text-amber-300 focus:outline-none focus:border-amber-500 font-bold placeholder-slate-600 uppercase"
               />
             </div>
 
@@ -258,7 +285,16 @@ export const RoomCheckinPortal: React.FC<RoomCheckinPortalProps> = ({
                 maxLength={8}
                 placeholder="DNI de 8 dígitos"
                 value={dniInput}
-                onChange={(e) => setDniInput(e.target.value)}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setDniInput(val);
+                  if (val.length === 8) {
+                    const lastLog = attendanceRecords.find((r) => r.workerDni === val && r.roomNumber);
+                    if (lastLog?.roomNumber) {
+                      setRoomInput(lastLog.roomNumber);
+                    }
+                  }
+                }}
                 className="w-full px-3.5 py-3 text-sm bg-slate-950 border-2 border-slate-800 rounded-xl text-amber-400 focus:outline-none focus:border-amber-500 font-mono font-bold text-center placeholder-slate-600"
                 required
               />

@@ -12,11 +12,12 @@ import {
   CheckCircle2,
   Grid,
 } from 'lucide-react';
-import { MonthlyValuationMatrix, ValuationMatrixRow, ValuationItem } from '../types';
+import { Worker, MonthlyValuationMatrix, ValuationMatrixRow, ValuationItem } from '../types';
 import { exportValuationMatrixToExcel, exportToExcel } from '../utils/excelExport';
 
 interface ValuationPageProps {
   valuations: ValuationItem[];
+  workers: Worker[];
   onAddValuation: (item: ValuationItem) => void;
   onExportExcel: () => void;
 }
@@ -117,6 +118,7 @@ const DEMO_MATRIX_ROWS: ValuationMatrixRow[] = [
 
 export const ValuationPage: React.FC<ValuationPageProps> = ({
   valuations,
+  workers,
   onAddValuation,
   onExportExcel,
 }) => {
@@ -298,6 +300,33 @@ export const ValuationPage: React.FC<ValuationPageProps> = ({
         </h3>
 
         <form onSubmit={handleAddRow} className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-6 gap-3 text-xs">
+          <div className="sm:col-span-3 lg:col-span-6 bg-slate-950 p-2.5 rounded-xl border border-slate-800 flex flex-col sm:flex-row items-center gap-3">
+            <span className="text-slate-300 font-bold text-xs whitespace-nowrap flex items-center gap-1.5">
+              <Users className="w-4 h-4 text-amber-400" />
+              Autocompletar desde Personal Registrado:
+            </span>
+            <select
+              onChange={(e) => {
+                const dni = e.target.value;
+                if (!dni) return;
+                const found = workers.find((w) => w.dni === dni);
+                if (found) {
+                  setNewWorkerName(found.fullName.toUpperCase());
+                  setNewArea(found.company.toUpperCase());
+                  setNewRole(found.role.toUpperCase());
+                }
+              }}
+              className="w-full sm:w-auto flex-1 p-2 bg-slate-900 border border-slate-700 rounded-lg text-slate-200 text-xs font-semibold"
+            >
+              <option value="">-- Seleccionar Trabajador para Autocompletar --</option>
+              {workers.map((w) => (
+                <option key={w.id} value={w.dni}>
+                  {w.fullName} — {w.company} ({w.role})
+                </option>
+              ))}
+            </select>
+          </div>
+
           <div>
             <label className="block text-slate-400 font-bold mb-1">N° Habitación:</label>
             <input

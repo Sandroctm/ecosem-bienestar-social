@@ -348,6 +348,7 @@ export function App() {
           {activeModule === 'valuation' && (
             <ValuationPage
               valuations={valuations}
+              workers={workers}
               onAddValuation={handleAddValuation}
               onExportExcel={handleExportCurrentModuleToExcel}
             />
