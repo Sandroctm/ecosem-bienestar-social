@@ -4,6 +4,7 @@ export type ActiveModule =
   | 'qr-attendance'
   | 'valuation'
   | 'room-handover'
+  | 'room-management'
   | 'incidents'
   | 'family-health'
   | 'education'
@@ -204,5 +205,48 @@ export interface AuditLog {
   action: string;
   user: string;
   hashSignature: string;
+}
+
+export type RoomStatus = 'Libre' | 'Ocupado' | 'Limpieza' | 'Reservado' | 'Mantenimiento';
+
+export interface Room {
+  id: string;
+  roomNumber: string; // ej: "101", "HAB. 502"
+  pabellon: string;   // ej: "Pabellón A", "Pabellón B", "Pabellón Diana"
+  floor: number;      // 1, 2, 3
+  capacity: number;   // cantidad de camas
+  status: RoomStatus;
+  currentOccupantDni?: string;
+  currentOccupantName?: string;
+  occupantCompany?: string;
+  checkInDate?: string;
+  lastLinenChangeDate: string; // YYYY-MM-DD
+}
+
+export interface Pabellon {
+  id: string;
+  name: string; // "Pabellón A", "Pabellón B", etc.
+  description: string;
+  floorsCount: number;
+}
+
+export interface BedSheetAlert {
+  roomId: string;
+  roomNumber: string;
+  pabellon: string;
+  daysSinceLastChange: number;
+  isRedAlert: boolean; // >= 14 días
+}
+
+export interface ValuationHistoryRecord {
+  id: string;
+  monthYear: string; // ej: "MAYO 2026", "JUNIO 2026"
+  savedDate: string;
+  locationName: string;
+  totalSubtotal: number;
+  totalIgv: number;
+  grandTotal: number;
+  totalWorkersCount: number;
+  matrixData: MonthlyValuationMatrix;
 }
 

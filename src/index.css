@@ -39,24 +39,25 @@
 
 /* ─── Glass Panels ─── */
 .glass-panel {
-  background: rgba(17, 24, 39, 0.75);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(11, 19, 32, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
 }
 
 .glass-card {
-  background: rgba(31, 41, 55, 0.6);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(217, 167, 0, 0.15);
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(16, 185, 129, 0.25);
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .glass-card:hover {
-  border-color: rgba(217, 167, 0, 0.4);
+  border-color: rgba(16, 185, 129, 0.5);
   transform: translateY(-2px);
-  box-shadow: 0 10px 25px -5px rgba(217, 167, 0, 0.1),
-              0 0 0 1px rgba(217, 167, 0, 0.05);
+  box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.2),
+              0 0 0 1px rgba(217, 167, 0, 0.15);
 }
 
 /* ─── Gold Gradient Text ─── */

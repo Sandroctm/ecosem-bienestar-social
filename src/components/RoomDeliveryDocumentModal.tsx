@@ -380,6 +380,26 @@ export const RoomDeliveryDocumentModal: React.FC<RoomDeliveryDocumentModalProps>
             ACTA DE ENTREGA DE HABITACIÓN E INVENTARIO FOTOGRÁFICO DE ENSERES
           </div>
 
+          {/* Summary KPIs Banner (Impresión Oficial) */}
+          <div className="grid grid-cols-4 gap-2 text-[10px] text-center bg-emerald-50 p-2.5 rounded-lg border border-emerald-300 font-mono">
+            <div>
+              <span className="text-slate-500 font-bold block uppercase">TRABAJADORES HOSPEDADOS</span>
+              <strong className="text-emerald-950 text-xs">8 Colaboradores</strong>
+            </div>
+            <div>
+              <span className="text-slate-500 font-bold block uppercase">CAMAS OCUPADAS</span>
+              <strong className="text-rose-900 text-xs">12 Camas</strong>
+            </div>
+            <div>
+              <span className="text-slate-500 font-bold block uppercase">CAMAS DISPONIBLES</span>
+              <strong className="text-emerald-900 text-xs">6 Camas Libres</strong>
+            </div>
+            <div>
+              <span className="text-slate-500 font-bold block uppercase">HABITACIONES LIBRES</span>
+              <strong className="text-blue-900 text-xs">3 Habitaciones 🟢</strong>
+            </div>
+          </div>
+
           {/* Details Table */}
           <div className="grid grid-cols-2 gap-4 text-xs bg-slate-50 p-4 rounded-lg border border-slate-200">
             <div>

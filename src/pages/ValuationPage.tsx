@@ -314,6 +314,9 @@ export const ValuationPage: React.FC<ValuationPageProps> = ({
                   setNewWorkerName(found.fullName.toUpperCase());
                   setNewArea(found.company.toUpperCase());
                   setNewRole(found.role.toUpperCase());
+                  if (found.roomNumber) {
+                    setNewRoomNumber(found.roomNumber);
+                  }
                 }
               }}
               className="w-full sm:w-auto flex-1 p-2 bg-slate-900 border border-slate-700 rounded-lg text-slate-200 text-xs font-semibold"

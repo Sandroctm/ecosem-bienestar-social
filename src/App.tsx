@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Navbar } from './components/Navbar';
 import { Sidebar } from './components/Sidebar';
-import { ActiveModule, Worker, AttendanceRecord, RoomHandover, IncidentReport, ValuationItem } from './types';
+import { ActiveModule, Worker, AttendanceRecord, RoomHandover, IncidentReport, ValuationItem, Room, Pabellon } from './types';
 import {
   INITIAL_WORKERS,
   INITIAL_ATTENDANCE,
@@ -20,12 +20,14 @@ import {
   DEMO_ATTENDANCE,
   DEMO_BENEFIT_REQUESTS,
 } from './utils/mockData';
+import { INITIAL_ROOMS, INITIAL_PABELLONES } from './utils/mockRooms';
 
 // Pages
 import { DashboardPage } from './pages/DashboardPage';
 import { QRAttendancePage } from './pages/QRAttendancePage';
 import { ValuationPage } from './pages/ValuationPage';
 import { RoomDeliveryPage } from './pages/RoomDeliveryPage';
+import { RoomManagementPage } from './pages/RoomManagementPage';
 import { IncidentsPage } from './pages/IncidentsPage';
 import { FamilyHealthPage } from './pages/FamilyHealthPage';
 import { EducationPage } from './pages/EducationPage';
@@ -38,6 +40,7 @@ import { AuditCompliancePage } from './pages/AuditCompliancePage';
 import { WorkersManagementPage } from './pages/WorkersManagementPage';
 import { WorkerPortalPage } from './pages/WorkerPortalPage';
 import { RoomCheckinPortal } from './pages/RoomCheckinPortal';
+import { AICopilotModal } from './components/AICopilotModal';
 
 // Modals
 import { QRScannerModal } from './components/QRScannerModal';
@@ -89,6 +92,8 @@ export function App() {
   const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>(() => loadFromStorage('ecosem_attendance', INITIAL_ATTENDANCE));
   const [valuations, setValuations] = useState<ValuationItem[]>(() => loadFromStorage('ecosem_valuations', INITIAL_VALUATIONS));
   const [roomHandovers, setRoomHandovers] = useState<RoomHandover[]>(() => loadFromStorage('ecosem_room_handovers', INITIAL_ROOM_HANDOVERS));
+  const [rooms, setRooms] = useState<Room[]>(() => loadFromStorage('ecosem_rooms', INITIAL_ROOMS));
+  const [pabellones, setPabellones] = useState<Pabellon[]>(() => loadFromStorage('ecosem_pabellones', INITIAL_PABELLONES));
   const [incidents, setIncidents] = useState<IncidentReport[]>(() => loadFromStorage('ecosem_incidents', INITIAL_INCIDENTS));
   const [familyHealth, setFamilyHealth] = useState(() => loadFromStorage('ecosem_family_health', INITIAL_FAMILY_HEALTH));
   const [scholarships, setScholarships] = useState(() => loadFromStorage('ecosem_scholarships', INITIAL_SCHOLARSHIPS));
@@ -104,6 +109,8 @@ export function App() {
   useEffect(() => { localStorage.setItem('ecosem_attendance', JSON.stringify(attendanceRecords)); }, [attendanceRecords]);
   useEffect(() => { localStorage.setItem('ecosem_valuations', JSON.stringify(valuations)); }, [valuations]);
   useEffect(() => { localStorage.setItem('ecosem_room_handovers', JSON.stringify(roomHandovers)); }, [roomHandovers]);
+  useEffect(() => { localStorage.setItem('ecosem_rooms', JSON.stringify(rooms)); }, [rooms]);
+  useEffect(() => { localStorage.setItem('ecosem_pabellones', JSON.stringify(pabellones)); }, [pabellones]);
   useEffect(() => { localStorage.setItem('ecosem_incidents', JSON.stringify(incidents)); }, [incidents]);
   useEffect(() => { localStorage.setItem('ecosem_family_health', JSON.stringify(familyHealth)); }, [familyHealth]);
   useEffect(() => { localStorage.setItem('ecosem_scholarships', JSON.stringify(scholarships)); }, [scholarships]);
@@ -128,6 +135,16 @@ export function App() {
   const [isQRScannerOpen, setIsQRScannerOpen] = useState(false);
   const [isRoomModalOpen, setIsRoomModalOpen] = useState(false);
   const [isWhatsAppModalOpen, setIsWhatsAppModalOpen] = useState(false);
+  const [isAICopilotOpen, setIsAICopilotOpen] = useState(false);
+
+  // Room management handlers
+  const handleAddRoom = (newRoom: Room) => setRooms([newRoom, ...rooms]);
+  const handleUpdateRoom = (updatedRoom: Room) => setRooms(rooms.map((r) => (r.id === updatedRoom.id ? updatedRoom : r)));
+  const handleDeleteRoom = (roomId: string) => setRooms(rooms.filter((r) => r.id !== roomId));
+  const handleUpdateLinenChange = (roomId: string) => {
+    const todayStr = new Date().toISOString().split('T')[0];
+    setRooms(rooms.map((r) => (r.id === roomId ? { ...r, lastLinenChangeDate: todayStr, status: r.status === 'Limpieza' ? 'Libre' : r.status } : r)));
+  };
 
   // Worker registration handlers
   const handleAddWorker = (newWorker: Worker) => {
@@ -359,6 +376,19 @@ export function App() {
             />
           )}
 
+          {activeModule === 'room-management' && (
+            <RoomManagementPage
+              rooms={rooms}
+              pabellones={pabellones}
+              workers={workers}
+              onAddRoom={handleAddRoom}
+              onUpdateRoom={handleUpdateRoom}
+              onDeleteRoom={handleDeleteRoom}
+              onUpdateLinenChange={handleUpdateLinenChange}
+              onOpenAICopilot={() => setIsAICopilotOpen(true)}
+            />
+          )}
+
           {activeModule === 'room-handover' && (
             <RoomDeliveryPage
               handovers={roomHandovers}
@@ -471,6 +501,15 @@ export function App() {
         isOpen={isWhatsAppModalOpen}
         onClose={() => setIsWhatsAppModalOpen(false)}
         onSaveIncident={handleSaveIncident}
+      />
+
+      <AICopilotModal
+        isOpen={isAICopilotOpen}
+        onClose={() => setIsAICopilotOpen(false)}
+        rooms={rooms}
+        workers={workers}
+        incidents={incidents}
+        attendance={attendanceRecords}
       />
 
     </div>

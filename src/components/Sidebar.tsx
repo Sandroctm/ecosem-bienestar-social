@@ -53,6 +53,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeModule, onNavigate }) =>
       tag: 'Costo',
     },
     {
+      id: 'room-management' as ActiveModule,
+      label: 'Plano y Gestión Cuartos',
+      icon: Building2,
+      highlight: true,
+      tag: 'Plano IA',
+    },
+    {
       id: 'room-handover' as ActiveModule,
       label: 'Entrega de Cuarto',
       icon: BedDouble,
