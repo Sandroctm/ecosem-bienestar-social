@@ -9,7 +9,11 @@ interface QRScannerModalProps {
   workers: Worker[];
   isOpen: boolean;
   onClose: () => void;
-  onScanSuccess: (workerDni: string, serviceType: 'Almuerzo' | 'Cena' | 'Alojamiento' | 'Ingreso Campamento' | 'Desayuno') => void;
+  onScanSuccess: (
+    workerDni: string,
+    serviceType: 'Almuerzo' | 'Cena' | 'Alojamiento' | 'Ingreso Campamento' | 'Desayuno',
+    roomNumber?: string
+  ) => void;
 }
 
 export const QRScannerModal: React.FC<QRScannerModalProps> = ({
@@ -80,8 +84,8 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({
     const foundWorker = workers.find((w) => w.dni === dni || w.qrCodeValue.includes(dni));
     if (foundWorker) {
       setLastScannedWorker(foundWorker);
-      onScanSuccess(foundWorker.dni, selectedService);
-      setFeedbackMsg(`¡Asistencia de ${selectedService} REGISTRADA CON ÉXITO!`);
+      onScanSuccess(foundWorker.dni, 'Ingreso Campamento', foundWorker.roomNumber);
+      setFeedbackMsg(`¡Asistencia de INGRESO A CAMPAMENTO REGISTRADA CON ÉXITO!${foundWorker.roomNumber ? ` (Habitación: ${foundWorker.roomNumber})` : ''}`);
       setTimeout(() => setFeedbackMsg(null), 3000);
     } else {
       // Allow registering even if worker is entered by DNI
@@ -98,8 +102,8 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({
         qrCodeValue: `ECOSEM:${dni}:REGISTRADO`,
       };
       setLastScannedWorker(fallbackWorker);
-      onScanSuccess(dni, selectedService);
-      setFeedbackMsg(`¡Asistencia de ${selectedService} REGISTRADA CON ÉXITO para DNI ${dni}!`);
+      onScanSuccess(dni, 'Ingreso Campamento');
+      setFeedbackMsg(`¡Asistencia de INGRESO A CAMPAMENTO REGISTRADA CON ÉXITO para DNI ${dni}!`);
       setTimeout(() => setFeedbackMsg(null), 3000);
     }
   };
@@ -164,29 +168,11 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({
           </button>
         </div>
 
-        {/* Service Type Selector */}
-        <div>
-          <label className="block text-xs font-bold text-amber-400 uppercase tracking-wider mb-1.5">
-            Tipo de Marcación Seleccionada:
-          </label>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-1.5">
-            {(['Ingreso Campamento', 'Alojamiento', 'Almuerzo'] as const).map((service) => (
-              <button
-                key={service}
-                type="button"
-                onClick={() => setSelectedService(service)}
-                className={`py-2.5 px-2 text-xs font-black rounded-xl border transition-all text-center flex items-center justify-center gap-1.5 ${
-                  selectedService === service
-                    ? 'bg-amber-500 text-slate-950 border-amber-400 shadow-lg shadow-amber-500/20 scale-[1.02]'
-                    : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-amber-500/40'
-                }`}
-              >
-                {service === 'Ingreso Campamento' && <span>🚪 Ingreso Campamento</span>}
-                {service === 'Alojamiento' && <span>🛏️ Alojamiento</span>}
-                {service === 'Almuerzo' && <span>🍽️ Comedor</span>}
-              </button>
-            ))}
-          </div>
+        {/* Service Type Indicator */}
+        <div className="bg-amber-500/10 border border-amber-500/30 p-2.5 rounded-xl text-center">
+          <span className="text-xs font-black text-amber-400 uppercase tracking-wider flex items-center justify-center gap-2">
+            🚪 Marcación Activa: Ingreso a Campamento
+          </span>
         </div>
 
         {/* Feedback message banner */}
@@ -277,7 +263,7 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({
               className="w-full py-2.5 px-4 gold-button text-xs font-black rounded-xl shadow-lg flex items-center justify-center gap-2"
             >
               <CheckCircle2 className="w-4 h-4" />
-              Escanear Este QR ({selectedService})
+              Escanear Este QR (Ingreso Campamento)
             </button>
           </div>
         )}
