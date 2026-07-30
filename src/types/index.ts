@@ -13,7 +13,8 @@ export type ActiveModule =
   | 'local-suppliers'
   | 'microcredits'
   | 'audit'
-  | 'worker-portal';
+  | 'worker-portal'
+  | 'room-checkin-portal';
 
 export interface Worker {
   id: string;
@@ -38,6 +39,7 @@ export interface AttendanceRecord {
   serviceType: 'Almuerzo' | 'Cena' | 'Alojamiento' | 'Ingreso Campamento' | 'Desayuno';
   status: 'Válido' | 'Observado' | 'Duplicado';
   scannedBy: string;
+  roomNumber?: string;
 }
 
 export interface ValuationItem {

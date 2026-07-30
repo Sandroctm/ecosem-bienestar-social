@@ -74,6 +74,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeModule, onNavigate }) =>
       tag: 'QR Móvil',
     },
     {
+      id: 'room-checkin-portal' as ActiveModule,
+      label: 'Portal Alojamiento QR',
+      icon: Smartphone,
+      highlight: true,
+      tag: 'Cuartos',
+    },
+    {
       id: 'family-health' as ActiveModule,
       label: 'Salud y Bienestar Familiar',
       icon: HeartPulse,

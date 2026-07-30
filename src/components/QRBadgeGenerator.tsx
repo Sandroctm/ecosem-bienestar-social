@@ -52,7 +52,11 @@ export const QRBadgeGenerator: React.FC<QRBadgeGeneratorProps> = ({ worker, onCl
 
         {/* QR Code Container */}
         <div className="bg-white p-3 rounded-xl inline-block shadow-lg border-2 border-emerald-500 my-1">
-          <QRCodeSVG value={worker.qrCodeValue} size={140} level="H" includeMargin={false} />
+          <QRCodeSVG value={`${window.location.origin}/?action=room-checkin&dni=${worker.dni}`} size={140} level="H" includeMargin={false} />
+        </div>
+
+        <div className="text-[10px] text-emerald-400 font-extrabold uppercase tracking-wide">
+          📷 Escanear con móvil para marcar llegada
         </div>
 
         <div className="text-[11px] font-mono text-slate-300 bg-slate-950 py-1.5 px-3 rounded-lg border border-slate-800">

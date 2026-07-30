@@ -45,8 +45,21 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({
 
       scanner.render(
         (decodedText) => {
-          const parts = decodedText.split(':');
-          const dniScanned = parts.length >= 2 ? parts[1] : decodedText;
+          let dniScanned = decodedText;
+          if (decodedText.includes('?')) {
+            try {
+              const urlParams = new URLSearchParams(decodedText.split('?')[1]);
+              const dni = urlParams.get('dni');
+              if (dni) {
+                dniScanned = dni;
+              }
+            } catch (e) {
+              console.error("Error parsing scanned URL:", e);
+            }
+          } else {
+            const parts = decodedText.split(':');
+            dniScanned = parts.length >= 2 ? parts[1] : decodedText;
+          }
           handleProcessScan(dniScanned);
         },
         () => {}
@@ -223,7 +236,7 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({
             {/* Generated QR Code display */}
             <div className="bg-white p-4 rounded-2xl inline-block shadow-xl border-4 border-amber-400">
               <QRCodeSVG
-                value={currentVirtualWorker ? currentVirtualWorker.qrCodeValue : `ECOSEM:${manualDni || '45892011'}:DEMO`}
+                value={currentVirtualWorker ? `${window.location.origin}/?action=room-checkin&dni=${currentVirtualWorker.dni}` : `${window.location.origin}/?action=room-checkin&dni=${manualDni || '45892011'}`}
                 size={180}
                 level="H"
               />

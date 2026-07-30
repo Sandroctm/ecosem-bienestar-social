@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Navbar } from './components/Navbar';
 import { Sidebar } from './components/Sidebar';
 import { ActiveModule, Worker, AttendanceRecord, RoomHandover, IncidentReport, ValuationItem } from './types';
@@ -35,6 +35,7 @@ import { MicrocreditPage } from './pages/MicrocreditPage';
 import { AuditCompliancePage } from './pages/AuditCompliancePage';
 import { WorkersManagementPage } from './pages/WorkersManagementPage';
 import { WorkerPortalPage } from './pages/WorkerPortalPage';
+import { RoomCheckinPortal } from './pages/RoomCheckinPortal';
 
 // Modals
 import { QRScannerModal } from './components/QRScannerModal';
@@ -44,23 +45,64 @@ import { WhatsAppIncidentModal } from './components/WhatsAppIncidentModal';
 // Excel Exporter
 import { exportToExcel } from './utils/excelExport';
 
+// Google Sheets integration
+import { sendToGoogleSheets } from './utils/googleSheets';
+
+// Utility helper to safely load state from localStorage
+const loadFromStorage = <T,>(key: string, defaultValue: T): T => {
+  const saved = localStorage.getItem(key);
+  if (saved) {
+    try {
+      return JSON.parse(saved);
+    } catch (e) {
+      console.error(`Error loading state ${key}:`, e);
+    }
+  }
+  return defaultValue;
+};
+
 export function App() {
   const [activeModule, setActiveModule] = useState<ActiveModule>('dashboard');
 
-  // Application Data States (Clean / Empty by default per user request)
-  const [workers, setWorkers] = useState<Worker[]>(INITIAL_WORKERS);
-  const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>(INITIAL_ATTENDANCE);
-  const [valuations, setValuations] = useState<ValuationItem[]>(INITIAL_VALUATIONS);
-  const [roomHandovers, setRoomHandovers] = useState<RoomHandover[]>(INITIAL_ROOM_HANDOVERS);
-  const [incidents, setIncidents] = useState<IncidentReport[]>(INITIAL_INCIDENTS);
-  const [familyHealth, setFamilyHealth] = useState(INITIAL_FAMILY_HEALTH);
-  const [scholarships, setScholarships] = useState(INITIAL_SCHOLARSHIPS);
-  const [infrastructure, setInfrastructure] = useState(INITIAL_INFRASTRUCTURE);
-  const [socialImpact, setSocialImpact] = useState(INITIAL_SOCIAL_IMPACT);
-  const [benefitRequests, setBenefitRequests] = useState(INITIAL_BENEFIT_REQUESTS);
-  const [suppliers, setSuppliers] = useState(INITIAL_SUPPLIERS);
-  const [microcredits, setMicrocredits] = useState(INITIAL_MICROCREDITS);
-  const [auditLogs, setAuditLogs] = useState(INITIAL_AUDIT_LOGS);
+  // Application Data States (Clean / Empty by default, persisted in localStorage)
+  const [workers, setWorkers] = useState<Worker[]>(() => loadFromStorage('ecosem_workers', INITIAL_WORKERS));
+  const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>(() => loadFromStorage('ecosem_attendance', INITIAL_ATTENDANCE));
+  const [valuations, setValuations] = useState<ValuationItem[]>(() => loadFromStorage('ecosem_valuations', INITIAL_VALUATIONS));
+  const [roomHandovers, setRoomHandovers] = useState<RoomHandover[]>(() => loadFromStorage('ecosem_room_handovers', INITIAL_ROOM_HANDOVERS));
+  const [incidents, setIncidents] = useState<IncidentReport[]>(() => loadFromStorage('ecosem_incidents', INITIAL_INCIDENTS));
+  const [familyHealth, setFamilyHealth] = useState(() => loadFromStorage('ecosem_family_health', INITIAL_FAMILY_HEALTH));
+  const [scholarships, setScholarships] = useState(() => loadFromStorage('ecosem_scholarships', INITIAL_SCHOLARSHIPS));
+  const [infrastructure, setInfrastructure] = useState(() => loadFromStorage('ecosem_infrastructure', INITIAL_INFRASTRUCTURE));
+  const [socialImpact, setSocialImpact] = useState(() => loadFromStorage('ecosem_social_impact', INITIAL_SOCIAL_IMPACT));
+  const [benefitRequests, setBenefitRequests] = useState(() => loadFromStorage('ecosem_benefit_requests', INITIAL_BENEFIT_REQUESTS));
+  const [suppliers, setSuppliers] = useState(() => loadFromStorage('ecosem_suppliers', INITIAL_SUPPLIERS));
+  const [microcredits, setMicrocredits] = useState(() => loadFromStorage('ecosem_microcredits', INITIAL_MICROCREDITS));
+  const [auditLogs, setAuditLogs] = useState(() => loadFromStorage('ecosem_audit_logs', INITIAL_AUDIT_LOGS));
+
+  // Persistence Effects - Automatically write states to localStorage on change
+  useEffect(() => { localStorage.setItem('ecosem_workers', JSON.stringify(workers)); }, [workers]);
+  useEffect(() => { localStorage.setItem('ecosem_attendance', JSON.stringify(attendanceRecords)); }, [attendanceRecords]);
+  useEffect(() => { localStorage.setItem('ecosem_valuations', JSON.stringify(valuations)); }, [valuations]);
+  useEffect(() => { localStorage.setItem('ecosem_room_handovers', JSON.stringify(roomHandovers)); }, [roomHandovers]);
+  useEffect(() => { localStorage.setItem('ecosem_incidents', JSON.stringify(incidents)); }, [incidents]);
+  useEffect(() => { localStorage.setItem('ecosem_family_health', JSON.stringify(familyHealth)); }, [familyHealth]);
+  useEffect(() => { localStorage.setItem('ecosem_scholarships', JSON.stringify(scholarships)); }, [scholarships]);
+  useEffect(() => { localStorage.setItem('ecosem_infrastructure', JSON.stringify(infrastructure)); }, [infrastructure]);
+  useEffect(() => { localStorage.setItem('ecosem_social_impact', JSON.stringify(socialImpact)); }, [socialImpact]);
+  useEffect(() => { localStorage.setItem('ecosem_benefit_requests', JSON.stringify(benefitRequests)); }, [benefitRequests]);
+  useEffect(() => { localStorage.setItem('ecosem_suppliers', JSON.stringify(suppliers)); }, [suppliers]);
+  useEffect(() => { localStorage.setItem('ecosem_microcredits', JSON.stringify(microcredits)); }, [microcredits]);
+  useEffect(() => { localStorage.setItem('ecosem_audit_logs', JSON.stringify(auditLogs)); }, [auditLogs]);
+
+  // Handle URL Parameter Routing for direct Room Checkin
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const action = params.get('action');
+    const dni = params.get('dni');
+    if (action === 'room-checkin' || dni) {
+      setActiveModule('room-checkin-portal');
+    }
+  }, []);
 
   // Modals state
   const [isQRScannerOpen, setIsQRScannerOpen] = useState(false);
@@ -109,7 +151,8 @@ export function App() {
   // Attendance scan handler
   const handleScanSuccess = (
     workerDni: string,
-    serviceType: 'Almuerzo' | 'Cena' | 'Alojamiento' | 'Ingreso Campamento' | 'Desayuno'
+    serviceType: 'Almuerzo' | 'Cena' | 'Alojamiento' | 'Ingreso Campamento' | 'Desayuno',
+    roomNumber?: string
   ) => {
     const worker = workers.find((w) => w.dni === workerDni);
     const workerName = worker ? worker.fullName : `Trabajador DNI ${workerDni}`;
@@ -125,17 +168,21 @@ export function App() {
       camp,
       serviceType,
       status: 'Válido',
-      scannedBy: 'Escáner Garita ECOSEM',
+      scannedBy: roomNumber ? `Auto-Registro Habitación ${roomNumber}` : 'Escáner Garita ECOSEM',
+      roomNumber,
     };
 
     setAttendanceRecords([newRecord, ...attendanceRecords]);
+
+    // Send to Google Sheets Webhook in background if configured
+    sendToGoogleSheets(newRecord).catch((err) => console.error('Error auto-syncing sheets:', err));
 
     // Log audit
     const newLog = {
       id: `AUD-${Date.now().toString().slice(-4)}`,
       timestamp: new Date().toLocaleString(),
       module: 'Asistencia QR',
-      action: `Marcación ${serviceType} registrada para ${workerName}`,
+      action: `Marcación ${serviceType} registrada para ${workerName}${roomNumber ? ` (Habitación ${roomNumber})` : ''}`,
       user: 'Supervisor Escáner',
       hashSignature: `0x${Math.random().toString(16).substring(2, 10)}`,
     };
@@ -208,20 +255,24 @@ export function App() {
     }
   };
 
+  const isPortal = activeModule === 'room-checkin-portal';
+
   return (
     <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100 selection:bg-amber-500 selection:text-slate-950">
       
       {/* Header Bar */}
-      <Navbar
-        activeModule={activeModule}
-        onNavigate={(mod) => setActiveModule(mod)}
-        onExportCurrentModule={handleExportCurrentModuleToExcel}
-      />
+      {!isPortal && (
+        <Navbar
+          activeModule={activeModule}
+          onNavigate={(mod) => setActiveModule(mod)}
+          onExportCurrentModule={handleExportCurrentModuleToExcel}
+        />
+      )}
 
-      <div className="flex-1 flex flex-col md:flex-row max-w-[1600px] w-full mx-auto p-3 sm:p-5 gap-5">
+      <div className={isPortal ? "flex-1 w-full mx-auto" : "flex-1 flex flex-col md:flex-row max-w-[1600px] w-full mx-auto p-3 sm:p-5 gap-5"}>
         
         {/* Navigation Sidebar */}
-        <Sidebar activeModule={activeModule} onNavigate={(mod) => setActiveModule(mod)} />
+        {!isPortal && <Sidebar activeModule={activeModule} onNavigate={(mod) => setActiveModule(mod)} />}
 
         {/* Main Content Area */}
         <main className="flex-1 min-w-0">
@@ -232,6 +283,18 @@ export function App() {
               onOpenQRScanner={() => setIsQRScannerOpen(true)}
               onOpenRoomModal={() => setIsRoomModalOpen(true)}
               onOpenWhatsAppModal={() => setIsWhatsAppModalOpen(true)}
+            />
+          )}
+
+          {activeModule === 'room-checkin-portal' && (
+            <RoomCheckinPortal
+              workers={workers}
+              onAddAttendance={handleScanSuccess}
+              attendanceRecords={attendanceRecords}
+              onBackToDashboard={() => {
+                window.history.replaceState({}, document.title, window.location.pathname);
+                setActiveModule('dashboard');
+              }}
             />
           )}
 

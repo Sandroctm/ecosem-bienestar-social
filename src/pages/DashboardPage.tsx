@@ -84,13 +84,22 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
           </div>
 
           {/* Direct Requirement Quick Action Buttons */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 w-full lg:w-auto">
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 w-full lg:w-auto">
             <button
               onClick={onOpenQRScanner}
               className="flex flex-col items-center justify-center p-3 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-300 transition-all group"
             >
               <QrCode className="w-5 h-5 mb-1 group-hover:scale-110 transition-transform text-amber-400" />
               <span className="text-[11px] font-bold">Asistencia QR</span>
+            </button>
+
+            <button
+              onClick={() => onNavigate('room-checkin-portal')}
+              className="flex flex-col items-center justify-center p-3 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 text-purple-300 transition-all group"
+              title="Portal de registro móvil y auto-asistencia de cuartos"
+            >
+              <Smartphone className="w-5 h-5 mb-1 group-hover:scale-110 transition-transform text-purple-400" />
+              <span className="text-[11px] font-bold text-center">Portal Aloj.</span>
             </button>
 
             <button
