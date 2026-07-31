@@ -97,15 +97,68 @@ export interface RoomHandover {
   status: 'Entregado' | 'Recibido' | 'Con Observación';
 }
 
+export type AttendanceSymbol = '1' | 'D' | 'L' | 'F' | '0';
+
 export interface ValuationMatrixRow {
   id: string;
   roomNumber: string;
+  roomType?: string; // Ej: Simple, Doble, Suite
   workerName: string;
   areaOrService: string;
   role: string;
   costCenter: string;
-  daysMarked: number[]; // Array of 31 days (1 for occupied, 0 for empty)
+  subcontractor?: string;
+  shift?: 'Día' | 'Noche';
+  daysMarked: (number | AttendanceSymbol)[]; // Array of 31 days ('1' = Pernoctación 100%, 'D' = Diurno 50%, 'L' = Licencia 0%, 'F' = Falta 0%)
   dailyRate: number;
+  foodConsumptionRate?: number; // Ej: 15.00
+}
+
+export interface ValuationAuditLog {
+  id: string;
+  valuationId: string;
+  timestamp: string;
+  user: string;
+  action: string;
+  details: string;
+}
+
+export interface ClientTariffSetting {
+  id: string;
+  clientId: string;
+  clientName: string;
+  roomType: 'Simple' | 'Doble' | 'Matrimonial' | 'Suite VIP';
+  dailyRate: number;
+  foodDailyRate: number;
+  validFrom: string;
+}
+
+export interface ValuationRecord {
+  id: string;
+  code: string; // Ej: VAL-2026-05-HC
+  year: number;
+  month: string; // ej: "Mayo", "Enero"
+  campId: string;
+  campName: string; // ej: "Hotel Centro", "Diana", "Posada del Minero"
+  clientId: string;
+  clientName: string; // ej: "Alpayana", "Volcan", "Chinalco"
+  creationMode: 'En Blanco' | 'Clonar Mes Anterior';
+  dailyRate: number; // ej: 10.00
+  totalPersonal: number;
+  totalDays: number;
+  subtotalHospedaje: number;
+  totalAlimentacion: number;
+  subtotal: number;
+  igv: number;
+  totalAmount: number; // Subtotal + IGV
+  status: 'Abierto' | 'Cerrado' | 'Facturado';
+  createdAt: string; // YYYY-MM-DD HH:mm
+  createdBy: string; // ej: "Juan Pérez", "Sandro Admin"
+  closedBy?: string;
+  closedAt?: string;
+  invoiceNumber?: string;
+  matrixRows: ValuationMatrixRow[];
+  auditLogs?: ValuationAuditLog[];
 }
 
 export interface MonthlyValuationMatrix {
@@ -236,6 +289,26 @@ export interface BedSheetAlert {
   pabellon: string;
   daysSinceLastChange: number;
   isRedAlert: boolean; // >= 14 días
+}
+
+export interface ValuationRecord {
+  id: string;
+  year: number;
+  month: string; // ej: "Mayo", "Enero"
+  campId: string;
+  campName: string; // ej: "Hotel Centro", "Diana", "Posada del Minero"
+  clientId: string;
+  clientName: string; // ej: "Alpayana", "Volcan", "Chinalco"
+  dailyRate: number; // ej: 10.00
+  totalPersonal: number;
+  totalDays: number;
+  totalAmount: number; // Subtotal + IGV
+  subtotal: number;
+  igv: number;
+  status: 'Abierto' | 'Cerrado' | 'Facturado';
+  createdAt: string; // YYYY-MM-DD HH:mm
+  createdBy: string; // ej: "Administrador", "Sandro"
+  matrixRows: ValuationMatrixRow[];
 }
 
 export interface ValuationHistoryRecord {

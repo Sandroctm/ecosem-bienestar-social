@@ -65,7 +65,11 @@ export const exportValuationMatrixToExcel = (
   const costCenterMap: Record<string, number> = {};
 
   matrix.rows.forEach((row) => {
-    const daysTotal = row.daysMarked.reduce((sum, val) => sum + val, 0);
+    let daysTotal = 0;
+    row.daysMarked.forEach((val) => {
+      if (val === '1' || val === 1) daysTotal += 1;
+      else if (val === 'D') daysTotal += 0.5;
+    });
     const montoMensual = daysTotal * row.dailyRate;
     grandSubtotal += montoMensual;
 
