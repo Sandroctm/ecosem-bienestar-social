@@ -411,20 +411,30 @@ const INITIAL_VALUATION_RECORDS: ValuationRecord[] = [
 ];
 
 export const ValuationPage: React.FC<ValuationPageProps> = ({ workers }) => {
-  // Navigation Modules (a, b, c, d, e per user specification)
-  const [activeTab, setActiveTab] = useState<'create' | 'history' | 'consolidated' | 'billing' | 'settings' | 'matrix'>('history');
-
-  // Database of Valuations
+  // Database of Valuations (Blank starting state per user request)
   const [records, setRecords] = useState<ValuationRecord[]>(() => {
     const saved = localStorage.getItem('ecosem_valuation_records');
     if (saved) {
       try {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed;
       } catch (e) {
         console.error(e);
       }
     }
-    return INITIAL_VALUATION_RECORDS;
+    return [];
+  });
+
+  // Navigation Modules
+  const [activeTab, setActiveTab] = useState<'create' | 'history' | 'consolidated' | 'billing' | 'settings' | 'matrix'>(() => {
+    const saved = localStorage.getItem('ecosem_valuation_records');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return 'history';
+      } catch (e) {}
+    }
+    return 'create';
   });
 
   // Client Tariff Settings
@@ -455,7 +465,16 @@ export const ValuationPage: React.FC<ValuationPageProps> = ({ workers }) => {
   const [campSearchQuery, setCampSearchQuery] = useState('');
 
   // Active matrix being edited / viewed
-  const [activeValuationId, setActiveValuationId] = useState<string | null>('VAL-2026-05-HOTEL');
+  const [activeValuationId, setActiveValuationId] = useState<string | null>(() => {
+    const saved = localStorage.getItem('ecosem_valuation_records');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed[0].id;
+      } catch (e) {}
+    }
+    return null;
+  });
 
   // Matrix Filter States
   const [filterSubcontractor, setFilterSubcontractor] = useState<string>('Todos');
@@ -889,8 +908,22 @@ export const ValuationPage: React.FC<ValuationPageProps> = ({ workers }) => {
             </p>
           </div>
 
-          {/* User Role Switcher Badge */}
-          <div className="flex flex-col items-end gap-2">
+          {/* User Role Switcher Badge & Clear Data */}
+          <div className="flex flex-col sm:flex-row items-end sm:items-center gap-2">
+            <button
+              onClick={() => {
+                if (window.confirm('¿Desea limpiar toda la base de datos de valorizaciones y empezar en blanco desde 0?')) {
+                  saveRecords([]);
+                  setActiveValuationId(null);
+                  setActiveTab('create');
+                }
+              }}
+              className="px-3.5 py-2 bg-rose-950/60 border border-rose-500/40 text-rose-300 rounded-2xl font-bold text-xs hover:bg-rose-900 transition-all flex items-center gap-1.5 shadow"
+              title="Limpiar base de datos para empezar a ingresar registros desde cero"
+            >
+              <Trash2 className="w-3.5 h-3.5" /> Empezar en Blanco
+            </button>
+
             <div className="bg-slate-900/90 p-2.5 rounded-2xl border border-slate-700 flex items-center gap-3 text-xs">
               <span className="text-slate-400 font-bold flex items-center gap-1">
                 <UserCheck className="w-4 h-4 text-amber-400" /> Perfil Activo:
@@ -1153,6 +1186,26 @@ export const ValuationPage: React.FC<ValuationPageProps> = ({ workers }) => {
       {/* ─────────────────────────────────────────────────────────────
           2. MATRIZ INTERACTIVA DE REGISTRO DIARIO (VISTA INTERNA)
          ───────────────────────────────────────────────────────────── */}
+      {activeTab === 'matrix' && !currentValuation && (
+        <div className="glass-panel p-12 rounded-3xl text-center space-y-5 border border-amber-500/30 animate-fade-in-up">
+          <div className="w-16 h-16 bg-amber-500/20 text-amber-400 rounded-2xl flex items-center justify-center mx-auto border border-amber-500/40">
+            <FileSpreadsheet className="w-8 h-8" />
+          </div>
+          <div className="space-y-2">
+            <h3 className="text-xl font-black text-slate-100 uppercase tracking-wide">Base de Datos en Blanco</h3>
+            <p className="text-xs text-slate-400 max-w-md mx-auto leading-relaxed">
+              No hay ninguna valorización activa en este momento. Inicie creando una nueva valorización para su campamento y los datos se guardarán automáticamente.
+            </p>
+          </div>
+          <button
+            onClick={() => setActiveTab('create')}
+            className="px-6 py-3 gold-button rounded-2xl text-xs font-black shadow-xl inline-flex items-center gap-2"
+          >
+            <Plus className="w-4 h-4" /> 📅 Crear Primera Valorización
+          </button>
+        </div>
+      )}
+
       {activeTab === 'matrix' && currentValuation && (
         <div className="space-y-6 animate-fade-in-up">
           {/* Header Banner & Action Buttons */}
@@ -1559,7 +1612,27 @@ export const ValuationPage: React.FC<ValuationPageProps> = ({ workers }) => {
       {/* ─────────────────────────────────────────────────────────────
           3. HISTORIAL DE VALORIZACIONES AMPLIADO TAB
          ───────────────────────────────────────────────────────────── */}
-      {activeTab === 'history' && (
+      {activeTab === 'history' && records.length === 0 && (
+        <div className="glass-panel p-12 rounded-3xl text-center space-y-5 border border-slate-800 animate-fade-in-up">
+          <div className="w-16 h-16 bg-amber-500/20 text-amber-400 rounded-2xl flex items-center justify-center mx-auto border border-amber-500/40">
+            <History className="w-8 h-8" />
+          </div>
+          <div className="space-y-2">
+            <h3 className="text-xl font-black text-slate-100 uppercase tracking-wide">Base de Datos en Blanco</h3>
+            <p className="text-xs text-slate-400 max-w-md mx-auto leading-relaxed">
+              No hay registros en el historial. Todas las nuevas valorizaciones que ingrese se guardarán automáticamente desde el primer dato.
+            </p>
+          </div>
+          <button
+            onClick={() => setActiveTab('create')}
+            className="px-6 py-3 gold-button rounded-2xl text-xs font-black shadow-xl inline-flex items-center gap-2"
+          >
+            <Plus className="w-4 h-4" /> 📅 Crear Primera Valorización
+          </button>
+        </div>
+      )}
+
+      {activeTab === 'history' && records.length > 0 && (
         <div className="glass-panel p-6 rounded-3xl border border-amber-500/30 space-y-6 animate-fade-in-up">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
             <div>
