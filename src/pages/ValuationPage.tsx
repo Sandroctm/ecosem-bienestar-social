@@ -325,13 +325,13 @@ export const ValuationPage: React.FC<ValuationPageProps> = ({ workers }) => {
       totalAmount: grandTotal,
       status: 'Abierto',
       createdAt: new Date().toISOString().replace('T', ' ').slice(0, 16),
-      createdBy: 'Juan Pérez (Operador)',
+      createdBy: 'Piero (Administrador)',
       matrixRows: generatedRows,
       auditLogs: [{
         id: `log-${Date.now()}`,
         valuationId: `VAL-${formYear}-${formMonth.toUpperCase()}-${selectedCamp.name.replace(/\s+/g, '').toUpperCase()}`,
         timestamp: new Date().toISOString().replace('T', ' ').slice(0, 16),
-        user: 'Juan Pérez',
+        user: 'Piero',
         action: 'Creación de Valorización',
         details: `Valorización creada en modo ${formCreationMode} con tarifa base S/ ${formDailyRate.toFixed(2)}`
       }]

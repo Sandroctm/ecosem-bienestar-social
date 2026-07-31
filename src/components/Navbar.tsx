@@ -81,16 +81,16 @@ export const Navbar: React.FC<NavbarProps> = ({ activeModule, onNavigate, onExpo
 
           {/* User profile */}
           <div className="flex items-center gap-2 pl-2">
-            <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-emerald-500 to-emerald-300 p-0.5 shadow-md">
+            <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-amber-500 to-amber-300 p-0.5 shadow-md">
               <img
                 src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150"
-                alt="Supervisor"
+                alt="Piero Administrador"
                 className="w-full h-full rounded-full object-cover"
               />
             </div>
-            <div className="hidden xl:block text-left">
-              <div className="text-xs font-bold text-slate-200">Juan Pérez</div>
-              <div className="text-[10px] text-emerald-400 font-bold uppercase">Supervisor ECOSEM</div>
+            <div className="text-left">
+              <div className="text-xs font-bold text-slate-200">Piero</div>
+              <div className="text-[10px] text-emerald-400 font-bold uppercase">ADMINISTRADOR ECOSEM</div>
             </div>
           </div>
         </div>
