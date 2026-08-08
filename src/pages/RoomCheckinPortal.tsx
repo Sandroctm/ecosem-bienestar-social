@@ -86,30 +86,35 @@ export const RoomCheckinPortal: React.FC<RoomCheckinPortalProps> = ({
     }
   }, []);
 
-  const handleProcessCheckin = (dni: string, room: string) => {
-    const cleanDni = dni.trim();
-    if (!cleanDni) return;
+  const handleProcessCheckin = (dniRaw: string, room: string) => {
+    const cleanInput = dniRaw.trim();
+    if (!cleanInput) return;
 
-    const found = workers.find((w) => w.dni === cleanDni);
-    
+    // Extraer DNI numérico de 8 dígitos (ej: "ECOSEM-W001-45871236" -> "45871236")
+    const dniMatch = cleanInput.match(/\b\d{8}\b/);
+    const targetDni = dniMatch ? dniMatch[0] : cleanInput;
+
+    const found = workers.find(
+      (w) => w.dni === targetDni || w.dni === cleanInput || w.qrCodeValue.includes(cleanInput) || w.id === cleanInput
+    );
+
     if (found) {
       setScannedWorker(found);
-      onAddAttendance(found.dni, 'Alojamiento', room);
+      onAddAttendance(found.dni, 'Alojamiento', room || found.roomNumber);
       playSound('success');
       setStatusMsg({
         type: 'success',
-        text: `¡ENTRADA REGISTRADA! Bienvenido(a) ${found.fullName}.`,
+        text: `¡ENTRADA REGISTRADA EN CELULAR! Marcación exitosa para ${found.fullName} (${found.company}).`,
       });
-      // Clear status after 5s
       setTimeout(() => setStatusMsg(null), 5000);
     } else {
       setScannedWorker(null);
-      // Even if not in DB, allow check-in and log as Observed
-      onAddAttendance(cleanDni, 'Alojamiento', room);
+      // Incluso si no está en el padrón, registrar marcación con DNI extraído
+      onAddAttendance(targetDni, 'Alojamiento', room);
       playSound('success');
       setStatusMsg({
         type: 'success',
-        text: `¡REGISTRADO! DNI ${cleanDni} marcado en Alojamiento (No listado en padrón).`,
+        text: `¡MARCACIÓN REGISTRADA! DNI ${targetDni} procesado correctamente.`,
       });
       setTimeout(() => setStatusMsg(null), 5000);
     }

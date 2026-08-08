@@ -93,6 +93,23 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({
     };
   }, [isOpen, activeTab, selectedService]);
 
+  const playAudioBeep = () => {
+    try {
+      const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(587.33, audioCtx.currentTime);
+      osc.frequency.setValueAtTime(880.00, audioCtx.currentTime + 0.08);
+      gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+      osc.start(audioCtx.currentTime);
+      osc.stop(audioCtx.currentTime + 0.3);
+    } catch (e) {}
+  };
+
   const handleProcessScan = (rawInput: string) => {
     const now = Date.now();
     // Bloqueo Debounce Lock de 2 segundos para erradicar el Double Submit Hazard
@@ -112,13 +129,21 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({
     isProcessingRef.current = true;
     lastScanTimestampRef.current = now;
 
-    const targetDni = sanitized.workerDni || sanitized.sanitizedValue;
-    const foundWorker = workers.find((w) => w.dni === targetDni || w.qrCodeValue.includes(targetDni));
+    // Extraer DNI de 8 dígitos o el valor decodificado limpio
+    const cleanStr = sanitized.sanitizedValue;
+    const dniMatch = cleanStr.match(/\b\d{8}\b/);
+    const targetDni = dniMatch ? dniMatch[0] : (sanitized.workerDni || cleanStr);
+
+    const foundWorker = workers.find(
+      (w) => w.dni === targetDni || w.dni === cleanStr || w.qrCodeValue.includes(targetDni) || w.id === targetDni
+    );
+
+    playAudioBeep();
 
     if (foundWorker) {
       setLastScannedWorker(foundWorker);
-      onScanSuccess(foundWorker.dni, 'Ingreso Campamento', foundWorker.roomNumber);
-      setFeedbackMsg(`¡Asistencia de INGRESO REGISTRADA CON ÉXITO!${foundWorker.roomNumber ? ` (Hab: ${foundWorker.roomNumber})` : ''}`);
+      onScanSuccess(foundWorker.dni, selectedService, foundWorker.roomNumber);
+      setFeedbackMsg(`¡MARCACIÓN EXITOSA! ${foundWorker.fullName} (${foundWorker.company}) - Servicio: ${selectedService}`);
     } else {
       const fallbackWorker: Worker = {
         id: `W-SCAN-${Date.now().toString().slice(-4)}`,
@@ -133,8 +158,8 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({
         qrCodeValue: `ECOSEM:${targetDni}:REGISTRADO`,
       };
       setLastScannedWorker(fallbackWorker);
-      onScanSuccess(targetDni, 'Ingreso Campamento');
-      setFeedbackMsg(`¡Asistencia REGISTRADA para DNI ${targetDni}!`);
+      onScanSuccess(targetDni, selectedService);
+      setFeedbackMsg(`¡MARCACIÓN REGISTRADA! DNI ${targetDni} marcado en ${selectedService}.`);
     }
 
     setTimeout(() => {

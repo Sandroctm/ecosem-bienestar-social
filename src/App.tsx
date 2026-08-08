@@ -41,7 +41,7 @@ import { MFAModal } from './components/MFAModal';
 import { OfflineSyncStatusBadge } from './components/OfflineSyncStatusBadge';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { DatabaseSyncModal } from './components/DatabaseSyncModal';
-import { subscribeRealtimeSync } from './utils/realtimeSyncEngine';
+import { subscribeRealtimeSync, broadcastMutation } from './utils/realtimeSyncEngine';
 import { fetchStateFromCloudServer } from './utils/databaseStateEngine';
 
 import {
@@ -241,6 +241,8 @@ export function App() {
         setPrestamos((prev) => [event.payload, ...prev.filter((p) => p.idPrestamo !== event.payload.idPrestamo)]);
       } else if (event.tableName === 'workers' && event.payload) {
         setWorkers((prev) => [event.payload, ...prev.filter((w) => w.id !== event.payload.id)]);
+      } else if (event.tableName === 'ecosem_attendance' && event.payload) {
+        setAttendanceRecords((prev) => [event.payload, ...prev.filter((a) => a.id !== event.payload.id)]);
       }
     });
     return () => unsubscribe();
@@ -340,11 +342,18 @@ export function App() {
 
   // Attendance scan handler
   const handleScanSuccess = (
-    workerDni: string,
+    rawDniInput: string,
     serviceType: 'Almuerzo' | 'Cena' | 'Alojamiento' | 'Ingreso Campamento' | 'Desayuno',
     roomNumber?: string
   ) => {
-    const worker = workers.find((w) => w.dni === workerDni);
+    const cleanInput = rawDniInput.trim();
+    const dniMatch = cleanInput.match(/\b\d{8}\b/);
+    const workerDni = dniMatch ? dniMatch[0] : cleanInput;
+
+    const worker = workers.find(
+      (w) => w.dni === workerDni || w.dni === cleanInput || w.qrCodeValue.includes(cleanInput) || w.id === cleanInput
+    );
+
     const workerName = worker ? worker.fullName : `Trabajador DNI ${workerDni}`;
     const company = worker ? worker.company : 'Contratista';
     const camp = worker ? worker.camp : 'Campamento Minero';
@@ -358,11 +367,12 @@ export function App() {
       camp,
       serviceType,
       status: 'Válido',
-      scannedBy: roomNumber ? `Auto-Registro Habitación ${roomNumber}` : 'Escáner Garita ECOSEM',
-      roomNumber,
+      scannedBy: roomNumber ? `Auto-Registro Habitación ${roomNumber}` : 'Escáner Móvil / Celular QR',
+      roomNumber: roomNumber || (worker ? worker.roomNumber : undefined),
     };
 
-    setAttendanceRecords([newRecord, ...attendanceRecords]);
+    setAttendanceRecords((prev) => [newRecord, ...prev]);
+    broadcastMutation('ecosem_attendance', 'INSERT', newRecord);
 
     // Send to Google Sheets Webhook in background if configured
     sendToGoogleSheets(newRecord).catch((err) => console.error('Error auto-syncing sheets:', err));
