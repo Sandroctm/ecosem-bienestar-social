@@ -355,53 +355,53 @@ export const RoomDeliveryDocumentModal: React.FC<RoomDeliveryDocumentModalProps>
         </div>
 
         {/* --- OFFICIAL PRINTABLE DOCUMENT FORMAT --- */}
-        <div className="bg-white text-slate-900 p-8 rounded-xl border border-slate-300 shadow-xl space-y-6 text-sm font-sans print-only">
+        <div className="bg-white text-slate-900 p-6 print:p-0 rounded-xl border border-slate-300 shadow-xl space-y-3.5 print:space-y-2 text-xs print:text-[10.5px] font-sans print-only">
           
           {/* Header Document */}
-          <div className="flex justify-between items-center border-b-2 border-amber-600 pb-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-amber-500 rounded-lg text-slate-950 font-black">
-                <Pickaxe className="w-7 h-7" />
+          <div className="flex justify-between items-center border-b-2 border-amber-600 pb-2.5 print:pb-1.5 avoid-page-break">
+            <div className="flex items-center gap-2.5">
+              <div className="p-1.5 print:p-1 bg-amber-500 rounded-lg text-slate-950 font-black">
+                <Pickaxe className="w-6 h-6 print:w-5 print:h-5" />
               </div>
               <div>
-                <div className="text-xl font-black tracking-wider text-slate-900">ECOSEM BIENESTAR SOCIAL</div>
-                <div className="text-xs uppercase font-extrabold text-amber-700">ACTA REGISTRO DE CAMPAMENTOS Y ALOJAMIENTO</div>
+                <div className="text-lg print:text-base font-black tracking-wider text-slate-900">ECOSEM BIENESTAR SOCIAL</div>
+                <div className="text-[10px] print:text-[9px] uppercase font-extrabold text-amber-700">ACTA REGISTRO DE CAMPAMENTOS Y ALOJAMIENTO</div>
               </div>
             </div>
             <div className="text-right">
-              <div className="text-sm font-mono font-black text-amber-800 bg-amber-50 px-3 py-1 rounded border border-amber-300">
+              <div className="text-xs print:text-[10px] font-mono font-black text-amber-800 bg-amber-50 px-2.5 py-0.5 rounded border border-amber-300">
                 {formData.handoverNumber}
               </div>
-              <div className="text-xs text-slate-500 mt-1">Fecha: <strong>{formData.date}</strong></div>
+              <div className="text-[10px] text-slate-500 mt-0.5">Fecha: <strong>{formData.date}</strong></div>
             </div>
           </div>
 
-          <div className="text-center bg-slate-100 py-2 rounded-md font-bold uppercase tracking-wider text-slate-800 text-sm border border-slate-200">
+          <div className="text-center bg-slate-100 py-1.5 print:py-1 rounded font-bold uppercase tracking-wider text-slate-800 text-xs print:text-[10px] border border-slate-200 avoid-page-break">
             ACTA DE ENTREGA DE HABITACIÓN E INVENTARIO FOTOGRÁFICO DE ENSERES
           </div>
 
           {/* Summary KPIs Banner (Impresión Oficial) */}
-          <div className="grid grid-cols-4 gap-2 text-[10px] text-center bg-emerald-50 p-2.5 rounded-lg border border-emerald-300 font-mono">
+          <div className="grid grid-cols-4 gap-1.5 text-[9px] print:text-[8.5px] text-center bg-emerald-50 p-2 print:p-1 rounded border border-emerald-300 font-mono avoid-page-break">
             <div>
               <span className="text-slate-500 font-bold block uppercase">TRABAJADORES HOSPEDADOS</span>
-              <strong className="text-emerald-950 text-xs">8 Colaboradores</strong>
+              <strong className="text-emerald-950 text-[11px] print:text-[10px]">8 Colaboradores</strong>
             </div>
             <div>
               <span className="text-slate-500 font-bold block uppercase">CAMAS OCUPADAS</span>
-              <strong className="text-rose-900 text-xs">12 Camas</strong>
+              <strong className="text-rose-900 text-[11px] print:text-[10px]">12 Camas</strong>
             </div>
             <div>
               <span className="text-slate-500 font-bold block uppercase">CAMAS DISPONIBLES</span>
-              <strong className="text-emerald-900 text-xs">6 Camas Libres</strong>
+              <strong className="text-emerald-900 text-[11px] print:text-[10px]">6 Camas Libres</strong>
             </div>
             <div>
               <span className="text-slate-500 font-bold block uppercase">HABITACIONES LIBRES</span>
-              <strong className="text-blue-900 text-xs">3 Habitaciones 🟢</strong>
+              <strong className="text-blue-900 text-[11px] print:text-[10px]">3 Habitaciones 🟢</strong>
             </div>
           </div>
 
           {/* Details Table */}
-          <div className="grid grid-cols-2 gap-4 text-xs bg-slate-50 p-4 rounded-lg border border-slate-200">
+          <div className="grid grid-cols-2 gap-3 print:gap-2 text-xs print:text-[10px] bg-slate-50 p-3 print:p-2 rounded border border-slate-200 avoid-page-break">
             <div>
               <p><span className="font-bold text-slate-700">Trabajador Receptor:</span> {formData.workerName}</p>
               <p><span className="font-bold text-slate-700">DNI:</span> {formData.workerDni}</p>
@@ -409,68 +409,68 @@ export const RoomDeliveryDocumentModal: React.FC<RoomDeliveryDocumentModalProps>
             </div>
             <div>
               <p><span className="font-bold text-slate-700">Campamento Minero:</span> <strong className="text-slate-900">{formData.camp}</strong></p>
-              <p><span className="font-bold text-slate-700">N° Habitación:</span> <span className="font-black text-amber-800 text-sm">{formData.roomNumber}</span></p>
+              <p><span className="font-bold text-slate-700">N° Habitación:</span> <span className="font-black text-amber-800 text-xs print:text-[11px]">{formData.roomNumber}</span></p>
               <p><span className="font-bold text-slate-700">Supervisor Responsable:</span> {formData.supervisorName}</p>
             </div>
           </div>
 
           {/* Inventory Quantitative Table */}
-          <div>
-            <h4 className="font-bold text-xs uppercase tracking-wider text-slate-700 mb-2">
+          <div className="avoid-page-break">
+            <h4 className="font-bold text-xs print:text-[10px] uppercase tracking-wider text-slate-700 mb-1.5 avoid-break-after">
               Detalle Cuantitativo de Bienes y Cosas Entregadas:
             </h4>
-            <table className="w-full text-xs text-left border-collapse border border-slate-300">
+            <table className="w-full text-xs print:text-[9.5px] text-left border-collapse border border-slate-300">
               <thead>
                 <tr className="bg-slate-200 text-slate-800 font-bold border-b border-slate-300">
-                  <th className="p-2 border-r border-slate-300">Bien / Enser Entregado</th>
-                  <th className="p-2 border-r border-slate-300 text-center">Cantidad Recibida</th>
-                  <th className="p-2 border-r border-slate-300">Estado Declarado</th>
-                  <th className="p-2">Conformidad</th>
+                  <th className="p-1.5 print:py-0.5 print:px-1.5 border-r border-slate-300">Bien / Enser Entregado</th>
+                  <th className="p-1.5 print:py-0.5 print:px-1.5 border-r border-slate-300 text-center">Cantidad Recibida</th>
+                  <th className="p-1.5 print:py-0.5 print:px-1.5 border-r border-slate-300">Estado Declarado</th>
+                  <th className="p-1.5 print:py-0.5 print:px-1.5">Conformidad</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200">
                 <tr>
-                  <td className="p-2 font-medium border-r border-slate-300">Camas / Camarotes Mineros</td>
-                  <td className="p-2 font-black text-center border-r border-slate-300">{formData.bedsCount} ud(s)</td>
-                  <td className="p-2 font-bold text-emerald-700 border-r border-slate-300">{formData.bedState}</td>
-                  <td className="p-2">☑ Conforme</td>
+                  <td className="p-1.5 print:py-0.5 print:px-1.5 font-medium border-r border-slate-300">Camas / Camarotes Mineros</td>
+                  <td className="p-1.5 print:py-0.5 print:px-1.5 font-black text-center border-r border-slate-300">{formData.bedsCount} ud(s)</td>
+                  <td className="p-1.5 print:py-0.5 print:px-1.5 font-bold text-emerald-700 border-r border-slate-300">{formData.bedState}</td>
+                  <td className="p-1.5 print:py-0.5 print:px-1.5">☑ Conforme</td>
                 </tr>
                 <tr>
-                  <td className="p-2 font-medium border-r border-slate-300">Colchones Ergonómicos</td>
-                  <td className="p-2 font-black text-center border-r border-slate-300">{formData.mattressesCount} ud(s)</td>
-                  <td className="p-2 font-bold text-emerald-700 border-r border-slate-300">{formData.mattressState}</td>
-                  <td className="p-2">☑ Conforme</td>
+                  <td className="p-1.5 print:py-0.5 print:px-1.5 font-medium border-r border-slate-300">Colchones Ergonómicos</td>
+                  <td className="p-1.5 print:py-0.5 print:px-1.5 font-black text-center border-r border-slate-300">{formData.mattressesCount} ud(s)</td>
+                  <td className="p-1.5 print:py-0.5 print:px-1.5 font-bold text-emerald-700 border-r border-slate-300">{formData.mattressState}</td>
+                  <td className="p-1.5 print:py-0.5 print:px-1.5">☑ Conforme</td>
                 </tr>
                 <tr>
-                  <td className="p-2 font-medium border-r border-slate-300">Juegos de Ropa de Cama & Frazadas</td>
-                  <td className="p-2 font-black text-center border-r border-slate-300">{formData.linensCount} ud(s)</td>
-                  <td className="p-2 font-bold text-emerald-700 border-r border-slate-300">{formData.linenState}</td>
-                  <td className="p-2">☑ Conforme</td>
+                  <td className="p-1.5 print:py-0.5 print:px-1.5 font-medium border-r border-slate-300">Juegos de Ropa de Cama & Frazadas</td>
+                  <td className="p-1.5 print:py-0.5 print:px-1.5 font-black text-center border-r border-slate-300">{formData.linensCount} ud(s)</td>
+                  <td className="p-1.5 print:py-0.5 print:px-1.5 font-bold text-emerald-700 border-r border-slate-300">{formData.linenState}</td>
+                  <td className="p-1.5 print:py-0.5 print:px-1.5">☑ Conforme</td>
                 </tr>
                 <tr>
-                  <td className="p-2 font-medium border-r border-slate-300">Almohadas Antialérgicas</td>
-                  <td className="p-2 font-black text-center border-r border-slate-300">{formData.pillowsCount} ud(s)</td>
-                  <td className="p-2 font-bold text-emerald-700 border-r border-slate-300">Conforme</td>
-                  <td className="p-2">☑ Conforme</td>
+                  <td className="p-1.5 print:py-0.5 print:px-1.5 font-medium border-r border-slate-300">Almohadas Antialérgicas</td>
+                  <td className="p-1.5 print:py-0.5 print:px-1.5 font-black text-center border-r border-slate-300">{formData.pillowsCount} ud(s)</td>
+                  <td className="p-1.5 print:py-0.5 print:px-1.5 font-bold text-emerald-700 border-r border-slate-300">Conforme</td>
+                  <td className="p-1.5 print:py-0.5 print:px-1.5">☑ Conforme</td>
                 </tr>
                 <tr>
-                  <td className="p-2 font-medium border-r border-slate-300">Llave / Tarjeta Magnética de Acceso</td>
-                  <td className="p-2 font-black text-center border-r border-slate-300">{formData.keyCardsCount} ud(s)</td>
-                  <td className="p-2 font-bold text-emerald-700 border-r border-slate-300">{formData.keyCardState}</td>
-                  <td className="p-2">☑ Conforme</td>
+                  <td className="p-1.5 print:py-0.5 print:px-1.5 font-medium border-r border-slate-300">Llave / Tarjeta Magnética de Acceso</td>
+                  <td className="p-1.5 print:py-0.5 print:px-1.5 font-black text-center border-r border-slate-300">{formData.keyCardsCount} ud(s)</td>
+                  <td className="p-1.5 print:py-0.5 print:px-1.5 font-bold text-emerald-700 border-r border-slate-300">{formData.keyCardState}</td>
+                  <td className="p-1.5 print:py-0.5 print:px-1.5">☑ Conforme</td>
                 </tr>
                 <tr>
-                  <td className="p-2 font-medium border-r border-slate-300">Controles Remotos (TV / Clima)</td>
-                  <td className="p-2 font-black text-center border-r border-slate-300">{formData.remotesCount} ud(s)</td>
-                  <td className="p-2 font-bold text-emerald-700 border-r border-slate-300">{formData.acHeaterState}</td>
-                  <td className="p-2">☑ Conforme</td>
+                  <td className="p-1.5 print:py-0.5 print:px-1.5 font-medium border-r border-slate-300">Controles Remotos (TV / Clima)</td>
+                  <td className="p-1.5 print:py-0.5 print:px-1.5 font-black text-center border-r border-slate-300">{formData.remotesCount} ud(s)</td>
+                  <td className="p-1.5 print:py-0.5 print:px-1.5 font-bold text-emerald-700 border-r border-slate-300">{formData.acHeaterState}</td>
+                  <td className="p-1.5 print:py-0.5 print:px-1.5">☑ Conforme</td>
                 </tr>
                 {formData.customItems && formData.customItems.map((item, idx) => (
                   <tr key={idx}>
-                    <td className="p-2 font-medium border-r border-slate-300">{item.name}</td>
-                    <td className="p-2 font-black text-center border-r border-slate-300">{item.quantity} ud(s)</td>
-                    <td className="p-2 font-bold text-emerald-700 border-r border-slate-300">Conforme</td>
-                    <td className="p-2">☑ Conforme</td>
+                    <td className="p-1.5 print:py-0.5 print:px-1.5 font-medium border-r border-slate-300">{item.name}</td>
+                    <td className="p-1.5 print:py-0.5 print:px-1.5 font-black text-center border-r border-slate-300">{item.quantity} ud(s)</td>
+                    <td className="p-1.5 print:py-0.5 print:px-1.5 font-bold text-emerald-700 border-r border-slate-300">Conforme</td>
+                    <td className="p-1.5 print:py-0.5 print:px-1.5">☑ Conforme</td>
                   </tr>
                 ))}
               </tbody>
@@ -479,17 +479,17 @@ export const RoomDeliveryDocumentModal: React.FC<RoomDeliveryDocumentModalProps>
 
           {/* ROOM PHOTO EMBEDDED IN OFFICIAL DOCUMENT REQUIREMENT */}
           {formData.roomPhotoUrl && (
-            <div>
-              <h4 className="font-bold text-xs uppercase tracking-wider text-slate-700 mb-1">
+            <div className="avoid-page-break">
+              <h4 className="font-bold text-xs print:text-[10px] uppercase tracking-wider text-slate-700 mb-1 avoid-break-after">
                 Fotografía Registrada del Estado de la Habitación:
               </h4>
-              <div className="p-2 bg-slate-100 border border-slate-300 rounded-lg text-center">
+              <div className="p-1.5 print:p-1 bg-slate-100 border border-slate-300 rounded text-center">
                 <img
                   src={formData.roomPhotoUrl}
                   alt="Fotografía de Entrega de Cuarto"
-                  className="max-h-48 mx-auto rounded border border-slate-400 object-contain shadow-sm"
+                  className="max-h-36 print:max-h-24 mx-auto rounded border border-slate-400 object-contain shadow-sm"
                 />
-                <p className="text-[10px] text-slate-500 mt-1 font-mono">
+                <p className="text-[9px] print:text-[8px] text-slate-500 mt-0.5 font-mono">
                   Evidencia fotográfica adjunta al acta de entrega en habitación {formData.roomNumber}
                 </p>
               </div>
@@ -497,20 +497,20 @@ export const RoomDeliveryDocumentModal: React.FC<RoomDeliveryDocumentModalProps>
           )}
 
           {/* Observations */}
-          <div>
-            <h4 className="font-bold text-xs uppercase tracking-wider text-slate-700 mb-1">Observaciones:</h4>
-            <div className="p-3 bg-slate-50 border border-slate-200 rounded text-xs italic text-slate-700 min-h-[40px]">
+          <div className="avoid-page-break">
+            <h4 className="font-bold text-xs print:text-[10px] uppercase tracking-wider text-slate-700 mb-0.5 avoid-break-after">Observaciones:</h4>
+            <div className="p-2 print:p-1.5 bg-slate-50 border border-slate-200 rounded text-xs print:text-[9.5px] italic text-slate-700 min-h-[30px] print:min-h-[20px]">
               "{formData.observations}"
             </div>
           </div>
 
           {/* Signatures Area */}
-          <div className="pt-10 grid grid-cols-2 gap-12 text-center text-xs">
-            <div className="border-t-2 border-slate-800 pt-2">
+          <div className="pt-6 print:pt-4 grid grid-cols-2 gap-8 print:gap-6 text-center text-xs print:text-[10px] avoid-page-break">
+            <div className="border-t-2 border-slate-800 pt-1.5">
               <p className="font-bold text-slate-900">{formData.workerName}</p>
               <p className="text-slate-500">Firma del Trabajador (DNI: {formData.workerDni})</p>
             </div>
-            <div className="border-t-2 border-slate-800 pt-2">
+            <div className="border-t-2 border-slate-800 pt-1.5">
               <p className="font-bold text-slate-900">{formData.supervisorName}</p>
               <p className="text-slate-500">Firma Supervisor Residencia ECOSEM</p>
             </div>
