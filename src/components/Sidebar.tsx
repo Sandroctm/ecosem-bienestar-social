@@ -15,6 +15,11 @@ import {
   Coins,
   ShieldAlert,
   Smartphone,
+  Stethoscope,
+  Home,
+  Gift,
+  HeartHandshake,
+  Database,
 } from 'lucide-react';
 import { ActiveModule } from '../types';
 
@@ -30,6 +35,41 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeModule, onNavigate }) =>
       label: 'Dashboard General',
       icon: LayoutDashboard,
       highlight: false,
+    },
+    {
+      id: 'accidents-subsidies' as ActiveModule,
+      label: 'Accidentes y Subsidios',
+      icon: Stethoscope,
+      highlight: true,
+      tag: 'Essalud',
+    },
+    {
+      id: 'camp-housing' as ActiveModule,
+      label: 'Campamentos y Camas',
+      icon: Home,
+      highlight: true,
+      tag: 'Minero',
+    },
+    {
+      id: 'events-climate' as ActiveModule,
+      label: 'Entregas y Clima',
+      icon: Gift,
+      highlight: true,
+      tag: 'Firma',
+    },
+    {
+      id: 'bereavement-workflow' as ActiveModule,
+      label: 'Sepelio y Vida Ley',
+      icon: HeartHandshake,
+      highlight: true,
+      tag: 'Express',
+    },
+    {
+      id: 'resilience-backup' as ActiveModule,
+      label: 'Resiliencia y Backup',
+      icon: Database,
+      highlight: true,
+      tag: 'RPO/RTO',
     },
     {
       id: 'workers' as ActiveModule,

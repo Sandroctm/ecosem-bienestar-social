@@ -22,8 +22,22 @@ import {
 } from './utils/mockData';
 import { INITIAL_ROOMS, INITIAL_PABELLONES } from './utils/mockRooms';
 
-// Pages
 import { DashboardPage } from './pages/DashboardPage';
+import { AccidentsSubsidiesPage } from './pages/AccidentsSubsidiesPage';
+import { CampHousingManagementPage } from './pages/CampHousingManagementPage';
+import { EventsClimatePage } from './pages/EventsClimatePage';
+import { BereavementWorkflowPage } from './pages/BereavementWorkflowPage';
+import { ResilienceBackupPage } from './pages/ResilienceBackupPage';
+
+import {
+  INITIAL_ACCIDENTES_TRABAJO,
+  INITIAL_CAMPAMENTO_HABITACIONES,
+  INITIAL_ENTREGAS_BENEFICIOS,
+  INITIAL_SOLICITUDES_APROBACIONES,
+  INITIAL_UNIT_TENANTS,
+  INITIAL_RESILIENCE_METRICS,
+} from './utils/mockExtendedData';
+import { AccidenteTrabajo, CampamentoHabitacion, EntregaBeneficio, SolicitudAprobacion, UnitTenant, ResilienceMetrics } from './types';
 import { QRAttendancePage } from './pages/QRAttendancePage';
 import { ValuationPage } from './pages/ValuationPage';
 import { RoomDeliveryPage } from './pages/RoomDeliveryPage';
@@ -103,6 +117,23 @@ export function App() {
   const [suppliers, setSuppliers] = useState(() => loadFromStorage('ecosem_suppliers', INITIAL_SUPPLIERS));
   const [microcredits, setMicrocredits] = useState(() => loadFromStorage('ecosem_microcredits', INITIAL_MICROCREDITS));
   const [auditLogs, setAuditLogs] = useState(() => loadFromStorage('ecosem_audit_logs', INITIAL_AUDIT_LOGS));
+
+  // Estados para Módulos Operativos Extendidos (Tablas 09 a 12, Multitenant y Resiliencia)
+  const [accidentes, setAccidentes] = useState<AccidenteTrabajo[]>(() => loadFromStorage('ecosem_accidentes', INITIAL_ACCIDENTES_TRABAJO));
+  const [campamentos, setCampamentos] = useState<CampamentoHabitacion[]>(() => loadFromStorage('ecosem_campamentos', INITIAL_CAMPAMENTO_HABITACIONES));
+  const [entregas, setEntregas] = useState<EntregaBeneficio[]>(() => loadFromStorage('ecosem_entregas', INITIAL_ENTREGAS_BENEFICIOS));
+  const [solicitudes, setSolicitudes] = useState<SolicitudAprobacion[]>(() => loadFromStorage('ecosem_solicitudes', INITIAL_SOLICITUDES_APROBACIONES));
+  const [tenants] = useState<UnitTenant[]>(() => loadFromStorage('ecosem_tenants', INITIAL_UNIT_TENANTS));
+  const [currentTenantId, setCurrentTenantId] = useState<string>(() => loadFromStorage('ecosem_current_tenant_id', INITIAL_UNIT_TENANTS[0].id));
+  const [resilienceMetrics, setResilienceMetrics] = useState<ResilienceMetrics>(() => loadFromStorage('ecosem_resilience', INITIAL_RESILIENCE_METRICS));
+
+  // Persistence Effects
+  useEffect(() => { localStorage.setItem('ecosem_accidentes', JSON.stringify(accidentes)); }, [accidentes]);
+  useEffect(() => { localStorage.setItem('ecosem_campamentos', JSON.stringify(campamentos)); }, [campamentos]);
+  useEffect(() => { localStorage.setItem('ecosem_entregas', JSON.stringify(entregas)); }, [entregas]);
+  useEffect(() => { localStorage.setItem('ecosem_solicitudes', JSON.stringify(solicitudes)); }, [solicitudes]);
+  useEffect(() => { localStorage.setItem('ecosem_current_tenant_id', JSON.stringify(currentTenantId)); }, [currentTenantId]);
+  useEffect(() => { localStorage.setItem('ecosem_resilience', JSON.stringify(resilienceMetrics)); }, [resilienceMetrics]);
 
   // Persistence Effects - Automatically write states to localStorage on change
   useEffect(() => { localStorage.setItem('ecosem_workers', JSON.stringify(workers)); }, [workers]);
@@ -298,6 +329,50 @@ export function App() {
     }
   };
 
+  // Handlers para Módulos Operativos Extendidos
+  const currentTenant = tenants.find((t) => t.id === currentTenantId) || tenants[0];
+
+  const handleAddAccident = (newAcc: AccidenteTrabajo) => setAccidentes([newAcc, ...accidentes]);
+  const handleUpdateAccident = (updatedAcc: AccidenteTrabajo) =>
+    setAccidentes(accidentes.map((a) => (a.idAccidente === updatedAcc.idAccidente ? updatedAcc : a)));
+
+  const handleAddAsignacionCampamento = (newAsig: CampamentoHabitacion) =>
+    setCampamentos([newAsig, ...campamentos]);
+  const handleUpdateAsignacionCampamento = (updatedAsig: CampamentoHabitacion) =>
+    setCampamentos(campamentos.map((c) => (c.idAsignacion === updatedAsig.idAsignacion ? updatedAsig : c)));
+
+  const handleAddEntrega = (newEnt: EntregaBeneficio) => setEntregas([newEnt, ...entregas]);
+  const handleUpdateEntrega = (updatedEnt: EntregaBeneficio) =>
+    setEntregas(entregas.map((e) => (e.idEntrega === updatedEnt.idEntrega ? updatedEnt : e)));
+
+  const handleAddSolicitud = (newSol: SolicitudAprobacion) => setSolicitudes([newSol, ...solicitudes]);
+  const handleUpdateSolicitud = (updatedSol: SolicitudAprobacion) =>
+    setSolicitudes(solicitudes.map((s) => (s.idSolicitud === updatedSol.idSolicitud ? updatedSol : s)));
+
+  const handleTriggerBackup = () => {
+    setResilienceMetrics((prev: ResilienceMetrics) => ({
+      ...prev,
+      lastBackupTimestamp: new Date().toISOString().replace('T', ' ').substring(0, 16),
+    }));
+  };
+
+  const handleToggleFailover = () => {
+    setResilienceMetrics((prev: ResilienceMetrics) => ({
+      ...prev,
+      isFailoverActive: !prev.isFailoverActive,
+      nodeStatus: !prev.isFailoverActive
+        ? 'Failover Replica (AWS-SA-EAST-1)'
+        : 'Primary (Morococha Node 01)',
+    }));
+  };
+
+  const handleSimulateRTO = () => {
+    setResilienceMetrics((prev: ResilienceMetrics) => ({
+      ...prev,
+      lastBackupTimestamp: new Date().toISOString().replace('T', ' ').substring(0, 16),
+    }));
+  };
+
   const isPortal = activeModule === 'room-checkin-portal';
 
   return (
@@ -309,6 +384,9 @@ export function App() {
           activeModule={activeModule}
           onNavigate={(mod) => setActiveModule(mod)}
           onExportCurrentModule={handleExportCurrentModuleToExcel}
+          tenants={tenants}
+          currentTenantId={currentTenantId}
+          onTenantChange={setCurrentTenantId}
         />
       )}
 
@@ -322,10 +400,59 @@ export function App() {
           {activeModule === 'dashboard' && (
             <DashboardPage
               requests={benefitRequests}
-              onNavigate={(mod) => setActiveModule(mod)}
+              onNavigate={(mod: ActiveModule) => setActiveModule(mod)}
               onOpenQRScanner={() => setIsQRScannerOpen(true)}
               onOpenRoomModal={() => setIsRoomModalOpen(true)}
               onOpenWhatsAppModal={() => setIsWhatsAppModalOpen(true)}
+            />
+          )}
+
+          {activeModule === 'accidents-subsidies' && (
+            <AccidentsSubsidiesPage
+              accidentes={accidentes}
+              workers={workers}
+              onAddAccident={handleAddAccident}
+              onUpdateAccident={handleUpdateAccident}
+              currentTenantName={currentTenant.name}
+            />
+          )}
+
+          {activeModule === 'camp-housing' && (
+            <CampHousingManagementPage
+              campamentos={campamentos}
+              workers={workers}
+              onAddAsignacion={handleAddAsignacionCampamento}
+              onUpdateAsignacion={handleUpdateAsignacionCampamento}
+              currentTenantName={currentTenant.name}
+            />
+          )}
+
+          {activeModule === 'events-climate' && (
+            <EventsClimatePage
+              entregas={entregas}
+              workers={workers}
+              onAddEntrega={handleAddEntrega}
+              onUpdateEntrega={handleUpdateEntrega}
+              currentTenantName={currentTenant.name}
+            />
+          )}
+
+          {activeModule === 'bereavement-workflow' && (
+            <BereavementWorkflowPage
+              solicitudes={solicitudes}
+              workers={workers}
+              onAddSolicitud={handleAddSolicitud}
+              onUpdateSolicitud={handleUpdateSolicitud}
+              currentTenantName={currentTenant.name}
+            />
+          )}
+
+          {activeModule === 'resilience-backup' && (
+            <ResilienceBackupPage
+              metrics={resilienceMetrics}
+              onTriggerBackup={handleTriggerBackup}
+              onToggleFailover={handleToggleFailover}
+              onSimulateRTO={handleSimulateRTO}
             />
           )}
 

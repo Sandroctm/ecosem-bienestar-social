@@ -15,7 +15,21 @@ export type ActiveModule =
   | 'microcredits'
   | 'audit'
   | 'worker-portal'
-  | 'room-checkin-portal';
+  | 'room-checkin-portal'
+  | 'accidents-subsidies'
+  | 'camp-housing'
+  | 'events-climate'
+  | 'bereavement-workflow'
+  | 'resilience-backup';
+
+export interface DependentMember {
+  id: string;
+  fullName: string;
+  relationship: 'Hijo/a' | 'Cónyuge' | 'Padre/Madre';
+  birthDate: string; // YYYY-MM-DD
+  dni: string;
+  hasStudyCertificate?: boolean;
+}
 
 export interface Worker {
   id: string;
@@ -29,6 +43,13 @@ export interface Worker {
   phoneWhatsApp: string;
   status: 'Activo' | 'Inactivo';
   qrCodeValue: string;
+
+  // Campos extendidos para control de acceso y cargas familiares
+  sctrExpirationDate?: string; // YYYY-MM-DD
+  hasActiveMedicalLeave?: boolean;
+  medicalLeaveDays?: number;
+  monthlyAverageSalary?: number; // Para cálculo de subsidios
+  dependents?: DependentMember[];
 }
 
 export interface AttendanceRecord {
@@ -321,5 +342,95 @@ export interface ValuationHistoryRecord {
   grandTotal: number;
   totalWorkersCount: number;
   matrixData: MonthlyValuationMatrix;
+}
+
+// ==========================================
+// NUEVAS TABLAS Y ENTIDADES (09 a 12 + MULTITENANT & RESILIENCE)
+// ==========================================
+
+export interface AccidenteTrabajo {
+  idAccidente: string;
+  idTrabajador: string;
+  workerName: string;
+  workerDni: string;
+  fechaSiniestro: string;
+  lugarAccidente: string;
+  gravedad: 'Leve' | 'Incapacitante Temporal' | 'Incapacitante Permanente' | 'Mortal';
+  tipoAccidente: 'Trabajo Directo' | 'Accidente de Trayecto' | 'Enfermedad Ocupacional';
+  numFormularioST7: string;
+  diasIncapacidad: number;
+  sueldoPromedio12Meses: number;
+  subsidioEmpresaDias: number;
+  subsidioEmpresaMonto: number;
+  subsidioEssaludDias: number;
+  subsidioEssaludMonto: number;
+  estadoViva: 'Generado' | 'En Tramitación VIVA' | 'Cobrado / Reembolsado' | 'Observado Essalud';
+  cie10DiagnosticoEncrypted: string;
+  cie10Codigo: string;
+  unidadMinera: string;
+}
+
+export interface CampamentoHabitacion {
+  idAsignacion: string;
+  idTrabajador: string;
+  workerName: string;
+  workerDni: string;
+  company: string;
+  moduloHabitacion: string;
+  camaAsignada: string;
+  fechaIngreso: string;
+  fechaSalida: string;
+  estadoHabitacion: 'Limpia / Asignada' | 'Revisión Lavandería' | 'Desinfección Pendiente' | 'Inspeccionada Convivencia';
+  registroLavandería: string;
+  pagoHigieneEstado: 'Conforme' | 'Observado';
+  unidadMinera: string;
+}
+
+export interface EntregaBeneficio {
+  idEntrega: string;
+  idTrabajador: string;
+  workerName: string;
+  workerDni: string;
+  tipoBeneficio: 'Kit Navideño / Panetón' | 'Kit Escolar Hijos' | 'Reconocimiento Quinquenio' | 'Integración Familiar' | 'EPP Bienestar Especial';
+  fechaEntrega: string;
+  firmaDigitalUrl: string;
+  estadoEntrega: 'Entregado y Firmado' | 'Pendiente de Recojo' | 'Observado';
+  observaciones: string;
+  unidadMinera: string;
+}
+
+export interface SolicitudAprobacion {
+  idSolicitud: string;
+  idTrabajador: string;
+  workerName: string;
+  workerDni: string;
+  tipoSolicitud: 'Auxilio por Defunción' | 'Activación Seguro Vida Ley' | 'Préstamo de Emergencia' | 'Gasto de Sepelio Inmediato';
+  monto: number;
+  nivelAprobacion1: 'Pendiente' | 'Aprobado RRHH' | 'Rechazado';
+  aprobador1User?: string;
+  fechaAprobacion1?: string;
+  nivelAprobacion2: 'Pendiente' | 'Aprobado Gerencia' | 'Rechazado';
+  aprobador2User?: string;
+  fechaAprobacion2?: string;
+  estadoWorkflow: 'En Revisión RRHH' | 'En Revisión Gerencia' | 'Aprobado y Desembolsado' | 'Rechazado';
+  documentoRespaldoUrl?: string;
+  unidadMinera: string;
+}
+
+export interface UnitTenant {
+  id: string;
+  name: string;
+  code: string;
+  location: string;
+  activeWorkersCount: number;
+}
+
+export interface ResilienceMetrics {
+  rpoMinutes: number;
+  rtoMinutes: number;
+  lastBackupTimestamp: string;
+  nodeStatus: 'Primary (Morococha Node 01)' | 'Failover Replica (AWS-SA-EAST-1)';
+  isFailoverActive: boolean;
+  encryptedS3Bucket: string;
 }
 

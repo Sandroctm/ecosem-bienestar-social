@@ -1,14 +1,24 @@
 import React from 'react';
-import { ShieldCheck, Download, Smartphone, UserPlus } from 'lucide-react';
-import { ActiveModule } from '../types';
+import { ShieldCheck, Download, Smartphone, UserPlus, Building, Lock, Server } from 'lucide-react';
+import { ActiveModule, UnitTenant } from '../types';
 
 interface NavbarProps {
   activeModule: ActiveModule;
   onNavigate: (module: ActiveModule) => void;
   onExportCurrentModule: () => void;
+  tenants?: UnitTenant[];
+  currentTenantId?: string;
+  onTenantChange?: (tenantId: string) => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ activeModule, onNavigate, onExportCurrentModule }) => {
+export const Navbar: React.FC<NavbarProps> = ({
+  activeModule,
+  onNavigate,
+  onExportCurrentModule,
+  tenants = [],
+  currentTenantId,
+  onTenantChange,
+}) => {
   return (
     <header className="sticky top-0 z-30 w-full glass-panel border-b border-emerald-500/20 bg-slate-950/95 backdrop-blur-md px-4 py-2.5">
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -37,15 +47,39 @@ export const Navbar: React.FC<NavbarProps> = ({ activeModule, onNavigate, onExpo
           </div>
         </div>
 
-        {/* Quick Badge */}
-        <div className="hidden lg:flex items-center gap-4">
-          <div className="flex items-center gap-3 px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs">
-            <ShieldCheck className="w-5 h-5 text-emerald-400" />
-            <div>
-              <div className="text-[10px] text-slate-400 uppercase font-semibold">ECOSEM Pucara-Morococha</div>
-              <div className="font-bold text-emerald-300">100% Adaptado a la Industria Minera</div>
+        {/* Multitenant Unit Selector & Security Badges */}
+        <div className="flex flex-wrap items-center gap-3">
+          {tenants.length > 0 && onTenantChange && (
+            <div className="flex items-center gap-2 bg-slate-900 border border-slate-700/80 px-3 py-1.5 rounded-xl shadow-inner">
+              <Building className="w-4 h-4 text-emerald-400 shrink-0" />
+              <select
+                value={currentTenantId}
+                onChange={(e) => onTenantChange(e.target.value)}
+                className="bg-transparent text-xs font-bold text-slate-200 outline-none cursor-pointer"
+              >
+                {tenants.map((t) => (
+                  <option key={t.id} value={t.id} className="bg-slate-900 text-slate-200">
+                    🏢 {t.name} ({t.activeWorkersCount} trab.)
+                  </option>
+                ))}
+              </select>
             </div>
+          )}
+
+          {/* Quick AES-256 Badge */}
+          <div className="hidden xl:flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-900 border border-emerald-500/30 text-[10px] text-emerald-300 font-semibold">
+            <Lock className="w-3.5 h-3.5 text-emerald-400" />
+            <span>Cifrado AES-256 Ley N° 29733</span>
           </div>
+
+          <button
+            onClick={() => onNavigate('resilience-backup')}
+            className="hidden xl:flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-900 border border-indigo-500/40 text-[10px] text-indigo-300 hover:bg-indigo-500/10 font-semibold transition"
+            title="Panel de Resiliencia RPO/RTO y Failover"
+          >
+            <Server className="w-3.5 h-3.5 text-indigo-400" />
+            <span>RPO 15m / RTO &lt;10m</span>
+          </button>
         </div>
 
         {/* Action controls */}
@@ -98,3 +132,4 @@ export const Navbar: React.FC<NavbarProps> = ({ activeModule, onNavigate, onExpo
     </header>
   );
 };
+
