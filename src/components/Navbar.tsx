@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShieldCheck, Download, Smartphone, UserPlus, Building, Lock, Server } from 'lucide-react';
+import { ShieldCheck, Download, Smartphone, UserPlus, Building, Lock, Server, Key, Eye, HelpCircle, Laptop } from 'lucide-react';
 import { ActiveModule, UnitTenant } from '../types';
 
 interface NavbarProps {
@@ -9,6 +9,15 @@ interface NavbarProps {
   tenants?: UnitTenant[];
   currentTenantId?: string;
   onTenantChange?: (tenantId: string) => void;
+
+  // Parámetros de Módulos Enterprise
+  isOnline?: boolean;
+  onToggleOnline?: () => void;
+  isHighContrast?: boolean;
+  onToggleHighContrast?: () => void;
+  onOpenCommandPalette?: () => void;
+  isMfaVerified?: boolean;
+  onOpenMfaModal?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -18,9 +27,20 @@ export const Navbar: React.FC<NavbarProps> = ({
   tenants = [],
   currentTenantId,
   onTenantChange,
+  isOnline = true,
+  onToggleOnline,
+  isHighContrast = false,
+  onToggleHighContrast,
+  onOpenCommandPalette,
+  isMfaVerified = false,
+  onOpenMfaModal,
 }) => {
   return (
-    <header className="sticky top-0 z-30 w-full glass-panel border-b border-emerald-500/20 bg-slate-950/95 backdrop-blur-md px-4 py-2.5">
+    <header className={`sticky top-0 z-30 w-full border-b px-4 py-2.5 transition-colors ${
+      isHighContrast
+        ? 'bg-black text-white border-white'
+        : 'glass-panel border-emerald-500/20 bg-slate-950/95 backdrop-blur-md text-slate-100'
+    }`}>
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
         
         {/* Brand logo image & tagline */}
@@ -38,7 +58,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 ECOSEM
               </span>
               <span className="text-[11px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-rose-600/20 text-rose-400 border border-rose-500/30">
-                PUCARA-MOROCOCHA
+                ENTERPRISE ERP
               </span>
             </div>
             <p className="text-[11px] text-slate-400 font-semibold tracking-tight">
@@ -66,20 +86,49 @@ export const Navbar: React.FC<NavbarProps> = ({
             </div>
           )}
 
-          {/* Quick AES-256 Badge */}
-          <div className="hidden xl:flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-900 border border-emerald-500/30 text-[10px] text-emerald-300 font-semibold">
-            <Lock className="w-3.5 h-3.5 text-emerald-400" />
-            <span>Cifrado AES-256 Ley N° 29733</span>
-          </div>
-
+          {/* Quick Command Palette Button */}
           <button
-            onClick={() => onNavigate('resilience-backup')}
-            className="hidden xl:flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-900 border border-indigo-500/40 text-[10px] text-indigo-300 hover:bg-indigo-500/10 font-semibold transition"
-            title="Panel de Resiliencia RPO/RTO y Failover"
+            onClick={onOpenCommandPalette}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-700 text-xs text-slate-300 hover:bg-slate-800 transition"
+            title="Abrir buscador Ctrl+K"
           >
-            <Server className="w-3.5 h-3.5 text-indigo-400" />
-            <span>RPO 15m / RTO &lt;10m</span>
+            <span>Buscar</span>
+            <kbd className="px-1 py-0.5 bg-slate-800 text-[9px] rounded font-mono border border-slate-700">Ctrl+K</kbd>
           </button>
+
+          {/* High Contrast Theme Switch */}
+          <button
+            onClick={onToggleHighContrast}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs transition ${
+              isHighContrast
+                ? 'bg-white text-black border-white'
+                : 'bg-slate-900 border-slate-700 text-slate-300 hover:bg-slate-800'
+            }`}
+            title="Activar Alto Contraste para mina"
+          >
+            <Eye className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Alto Contraste</span>
+          </button>
+
+          {/* Multi-Factor Authentication Lock State */}
+          <button
+            onClick={onOpenMfaModal}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs transition ${
+              isMfaVerified
+                ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+                : 'bg-amber-500/20 text-amber-300 border-amber-500/30 animate-pulse'
+            }`}
+            title={isMfaVerified ? 'MFA Verificado' : 'Requiere Verificación MFA'}
+          >
+            <Key className="w-3.5 h-3.5" />
+            <span>{isMfaVerified ? 'MFA Activo' : 'Habilitar MFA'}</span>
+          </button>
+
+          {/* Quick AES-256 Badge */}
+          <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-900 border border-emerald-500/30 text-[10px] text-emerald-300 font-semibold">
+            <Lock className="w-3.5 h-3.5 text-emerald-400" />
+            <span>AES-256 Ley N° 29733</span>
+          </div>
         </div>
 
         {/* Action controls */}

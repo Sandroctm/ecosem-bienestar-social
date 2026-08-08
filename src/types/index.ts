@@ -20,7 +20,11 @@ export type ActiveModule =
   | 'camp-housing'
   | 'events-climate'
   | 'bereavement-workflow'
-  | 'resilience-backup';
+  | 'resilience-backup'
+  | 'medical-leaves'
+  | 'loans-assistance'
+  | 'sctr-management'
+  | 'predictive-analytics';
 
 export interface DependentMember {
   id: string;
@@ -29,6 +33,8 @@ export interface DependentMember {
   birthDate: string; // YYYY-MM-DD
   dni: string;
   hasStudyCertificate?: boolean;
+  deletedAt?: string;
+  deletedBy?: string;
 }
 
 export interface Worker {
@@ -50,6 +56,8 @@ export interface Worker {
   medicalLeaveDays?: number;
   monthlyAverageSalary?: number; // Para cálculo de subsidios
   dependents?: DependentMember[];
+  deletedAt?: string;
+  deletedBy?: string;
 }
 
 export interface AttendanceRecord {
@@ -279,6 +287,22 @@ export interface AuditLog {
   action: string;
   user: string;
   hashSignature: string;
+  ipAddress?: string;
+  details?: string;
+}
+
+// 08_Bitacora_Auditoria (LOG-XXX) - Registro forense inmutable
+export interface BitacoraAuditoria extends AuditLog {
+  idLog: string; // LOG-08-xxx
+  timestamp: string; // YYYY-MM-DD HH:mm:ss
+  module: string;
+  action: string;
+  user: string;
+  ipAddress: string;
+  hashSignature: string; // Firma hash inmutable
+  details: string;
+  deletedAt?: string; // Por diseño corporativo global
+  deletedBy?: string;
 }
 
 export type RoomStatus = 'Libre' | 'Ocupado' | 'Limpieza' | 'Reservado' | 'Mantenimiento';
@@ -433,4 +457,229 @@ export interface ResilienceMetrics {
   isFailoverActive: boolean;
   encryptedS3Bucket: string;
 }
+
+// ==========================================
+// MATRIZ COMPLETA DE BASE DE DATOS ENTERPRISE (12 TABLAS CON SOFT DELETE)
+// ==========================================
+
+// 01_Trabajadores (Reusado con soft delete)
+// En la interface Worker original se agregará: deletedAt?: string; deletedBy?: string;
+
+// 02_Derechohabientes (Reusado con soft delete)
+// En la interface DependentMember original se agregará: deletedAt?: string; deletedBy?: string;
+
+// 03_Descansos_Medicos (DESC-XXX)
+export interface DescansoMedico {
+  idDescanso: string; // DESC-03-xxx
+  idTrabajador: string;
+  workerName: string;
+  workerDni: string;
+  company: string;
+  fechaInicio: string; // YYYY-MM-DD
+  fechaFin: string; // YYYY-MM-DD
+  diasDescanso: number;
+  tipoDescanso: 'Descanso Común' | 'Accidente de Trabajo' | 'Maternidad' | 'Enfermedad Profesional';
+  diasEmpresa: number; // Primeros 20 días
+  diasEssalud: number;  // A partir del día 21
+  montoSubsidioEstimado: number;
+  estadoSubsidio: 'Pendiente Planilla' | 'Declarado VIVA' | 'Reembolsado' | 'Observado';
+  cie10Codigo: string; // Diagnóstico CIE-10
+  cie10DiagnosticoEncrypted: string; // Diagnóstico médico cifrado AES-256
+  deletedAt?: string;
+  deletedBy?: string;
+  unidadMinera: string;
+}
+
+// 04_Prestamos_y_Ayudas (PRES-XXX)
+export interface CronogramaCuota {
+  nroCuota: number;
+  fechaVencimiento: string;
+  montoCuota: number;
+  estado: 'Pendiente' | 'Pagado' | 'Vencido';
+}
+
+export interface PrestamoAyuda {
+  idPrestamo: string; // PRES-04-xxx
+  idTrabajador: string;
+  workerName: string;
+  workerDni: string;
+  tipoSocorro: 'Préstamo Emergencia' | 'Ayuda Social No Retornable' | 'Adelanto Sueldo';
+  montoSolicitado: number;
+  tasaInteresSocial: number; // 0% o interés social
+  cuotasTotales: number;
+  cronogramaCuotas: CronogramaCuota[];
+  estadoPrestamo: 'Pendiente Aprobación' | 'Vigente en Planilla' | 'Cancelado' | 'Observado';
+  motivoSolicitud: string;
+  deletedAt?: string;
+  deletedBy?: string;
+  unidadMinera: string;
+}
+
+// 05_SCTR_Polizas (POL-XXX)
+export interface SCTRPoliza {
+  idPoliza: string; // POL-05-xxx
+  idTrabajador: string;
+  workerName: string;
+  workerDni: string;
+  company: string;
+  tipoPoliza: 'SCTR Salud' | 'SCTR Pensión' | 'Vida Ley';
+  nroPoliza: string;
+  aseguradora: string;
+  fechaVigenciaInicio: string; // YYYY-MM-DD
+  fechaVigenciaFin: string; // YYYY-MM-DD
+  estadoPaseMina: 'Habilitado' | 'Bloqueado SCTR Vencido' | 'Pendiente Renovación';
+  deletedAt?: string;
+  deletedBy?: string;
+  unidadMinera: string;
+}
+
+// 06_Atenciones_Sociales (ATEN-XXX)
+export interface AtencionSocial {
+  idAtencion: string; // ATEN-06-xxx
+  idTrabajador: string;
+  workerName: string;
+  workerDni: string;
+  asistenteSocial: string;
+  fechaAtencion: string; // YYYY-MM-DD HH:mm
+  motivoConsulta: 'Problema Familiar' | 'Salud Crónica' | 'Apoyo Económico' | 'Clima Laboral';
+  informePsicopericialCifrado: string; // Informe confidencial cifrado con AES-256
+  diagnosticoOcupacional: string;
+  planAccionSocial: string;
+  estadoCaso: 'Abierto' | 'En Seguimiento' | 'Cerrado';
+  deletedAt?: string;
+  deletedBy?: string;
+  unidadMinera: string;
+}
+
+// 07_Visitas_Domiciliarias (VIS-XXX)
+export interface VisitaDomiciliaria {
+  idVisita: string; // VIS-07-xxx
+  idTrabajador: string;
+  workerName: string;
+  workerDni: string;
+  fechaVisita: string; // YYYY-MM-DD
+  asistenteSocial: string;
+  puntajeHabitabilidad: number; // 0-100
+  ingresoFamiliarMensual: number;
+  situacionSocioeconomica: 'Pobreza Extrema' | 'Pobreza' | 'Medio' | 'Vulnerable';
+  observacionesSoporte: string;
+  deletedAt?: string;
+  deletedBy?: string;
+  unidadMinera: string;
+}
+
+// 08_Bitacora_Auditoria (LOG-XXX) - Registro forense inmutable
+export interface BitacoraAuditoria {
+  idLog: string; // LOG-08-xxx
+  timestamp: string; // YYYY-MM-DD HH:mm:ss
+  module: string;
+  action: string;
+  user: string;
+  ipAddress: string;
+  hashSignature: string; // Firma hash inmutable
+  details: string;
+  deletedAt?: string; // Por diseño corporativo global
+  deletedBy?: string;
+}
+
+// 09_Accidentes_Trabajo (ACC-XXX) - Modificado para incluir soft delete y código
+// Redefinimos con deletedAt, deletedBy y id PK compatible
+export interface AccidenteTrabajoEnterprise {
+  idAccidente: string; // ACC-09-xxx
+  idTrabajador: string;
+  workerName: string;
+  workerDni: string;
+  fechaSiniestro: string;
+  lugarAccidente: string;
+  gravedad: 'Leve' | 'Incapacitante Temporal' | 'Incapacitante Permanente' | 'Mortal';
+  tipoAccidente: 'Trabajo Directo' | 'Accidente de Trayecto' | 'Enfermedad Ocupacional';
+  numFormularioST7: string;
+  diasIncapacidad: number;
+  sueldoPromedio12Meses: number;
+  subsidioEmpresaDias: number;
+  subsidioEmpresaMonto: number;
+  subsidioEssaludDias: number;
+  subsidioEssaludMonto: number;
+  estadoViva: 'Generado' | 'En Tramitación VIVA' | 'Cobrado / Reembolsado' | 'Observado Essalud';
+  cie10DiagnosticoEncrypted: string;
+  cie10Codigo: string;
+  deletedAt?: string;
+  deletedBy?: string;
+  unidadMinera: string;
+}
+
+// 10_Campamientos_Habitaciones (CAMP-XXX)
+export interface CampamentoHabitacionEnterprise {
+  idAsignacion: string; // CAMP-10-xxx
+  idTrabajador: string;
+  workerName: string;
+  workerDni: string;
+  company: string;
+  moduloHabitacion: string;
+  camaAsignada: string;
+  fechaIngreso: string;
+  fechaSalida: string;
+  estadoHabitacion: 'Limpia / Asignada' | 'Revisión Lavandería' | 'Desinfección Pendiente' | 'Inspeccionada Convivencia';
+  registroLavandería: string;
+  pagoHigieneEstado: 'Conforme' | 'Observado';
+  deletedAt?: string;
+  deletedBy?: string;
+  unidadMinera: string;
+}
+
+// 11_Entregas_y_Beneficios (BEN-XXX)
+export interface EntregaBeneficioEnterprise {
+  idEntrega: string; // BEN-11-xxx
+  idTrabajador: string;
+  workerName: string;
+  workerDni: string;
+  tipoBeneficio: 'Kit Navideño / Panetón' | 'Kit Escolar Hijos' | 'Reconocimiento Quinquenio' | 'Integración Familiar' | 'EPP Bienestar Especial';
+  fechaEntrega: string;
+  firmaDigitalUrl: string;
+  estadoEntrega: 'Entregado y Firmado' | 'Pendiente de Recojo' | 'Observado';
+  observaciones: string;
+  deletedAt?: string;
+  deletedBy?: string;
+  unidadMinera: string;
+}
+
+// 12_Workflow_Aprobaciones (SOL-XXX)
+export interface SolicitudAprobacionEnterprise {
+  idSolicitud: string; // SOL-12-xxx
+  idTrabajador: string;
+  workerName: string;
+  workerDni: string;
+  tipoSolicitud: 'Auxilio por Defunción' | 'Activación Seguro Vida Ley' | 'Préstamo de Emergencia' | 'Gasto de Sepelio Inmediato';
+  monto: number;
+  nivelAprobacion1: 'Pendiente' | 'Aprobado RRHH' | 'Rechazado';
+  aprobador1User?: string;
+  fechaAprobacion1?: string;
+  nivelAprobacion2: 'Pendiente' | 'Aprobado Gerencia' | 'Rechazado';
+  aprobador2User?: string;
+  fechaAprobacion2?: string;
+  estadoWorkflow: 'En Revisión RRHH' | 'En Revisión Gerencia' | 'Aprobado and Desembolsado' | 'Rechazado';
+  documentoRespaldoUrl?: string;
+  deletedAt?: string;
+  deletedBy?: string;
+  unidadMinera: string;
+}
+
+// Estructuras de IA, Sincronización y Notificaciones
+export interface AbsenteeismRiskReport {
+  workerId: string;
+  workerName: string;
+  riskScore: number; // 0-100
+  riskLevel: 'Bajo' | 'Medio' | 'Alto' | 'Crítico';
+  riskFactors: string[];
+  suggestedAction: string;
+}
+
+export interface OfflineSyncQueueItem {
+  id: string;
+  actionType: 'INSERT' | 'UPDATE' | 'DELETE';
+  tableName: string;
+  payload: any;
+  timestamp: string;
+}
+
 

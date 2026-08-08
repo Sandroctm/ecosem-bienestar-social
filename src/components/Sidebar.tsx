@@ -20,6 +20,9 @@ import {
   Gift,
   HeartHandshake,
   Database,
+  FileText,
+  Landmark,
+  Brain,
 } from 'lucide-react';
 import { ActiveModule } from '../types';
 
@@ -35,6 +38,34 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeModule, onNavigate }) =>
       label: 'Dashboard General',
       icon: LayoutDashboard,
       highlight: false,
+    },
+    {
+      id: 'medical-leaves' as ActiveModule,
+      label: 'Descansos Médicos',
+      icon: FileText,
+      highlight: true,
+      tag: 'VIVA',
+    },
+    {
+      id: 'loans-assistance' as ActiveModule,
+      label: 'Préstamos y Ayudas',
+      icon: Landmark,
+      highlight: true,
+      tag: 'Planilla',
+    },
+    {
+      id: 'sctr-management' as ActiveModule,
+      label: 'Vigilancia SCTR',
+      icon: ShieldAlert,
+      highlight: true,
+      tag: 'Pases',
+    },
+    {
+      id: 'predictive-analytics' as ActiveModule,
+      label: 'Predicción Ausentismo',
+      icon: Brain,
+      highlight: true,
+      tag: 'IA ML',
     },
     {
       id: 'accidents-subsidies' as ActiveModule,

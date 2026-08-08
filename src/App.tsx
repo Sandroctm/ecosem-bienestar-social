@@ -29,6 +29,31 @@ import { EventsClimatePage } from './pages/EventsClimatePage';
 import { BereavementWorkflowPage } from './pages/BereavementWorkflowPage';
 import { ResilienceBackupPage } from './pages/ResilienceBackupPage';
 
+// New Enterprise Pages
+import { MedicalLeaveManagementPage } from './pages/MedicalLeaveManagementPage';
+import { LoansSocialAssistancePage } from './pages/LoansSocialAssistancePage';
+import { SCTRManagementPage } from './pages/SCTRManagementPage';
+import { PredictiveAnalyticsPage } from './pages/PredictiveAnalyticsPage';
+
+// New Enterprise Components & Modals
+import { CommandPaletteModal } from './components/CommandPaletteModal';
+import { MFAModal } from './components/MFAModal';
+import { OfflineSyncStatusBadge } from './components/OfflineSyncStatusBadge';
+
+import {
+  MOCK_ENTERPRISE_WORKERS,
+  MOCK_ENTERPRISE_DESCANSOS,
+  MOCK_ENTERPRISE_PRESTAMOS,
+  MOCK_ENTERPRISE_SCTR,
+  MOCK_ENTERPRISE_ATENCIONES,
+  MOCK_ENTERPRISE_VISITAS,
+  MOCK_ENTERPRISE_AUDITORIA,
+  MOCK_ENTERPRISE_ACCIDENTES,
+  MOCK_ENTERPRISE_CAMPAMENTOS,
+  MOCK_ENTERPRISE_ENTREGAS,
+  MOCK_ENTERPRISE_SOLICITUDES,
+} from './utils/mockEnterprise12Tables';
+
 import {
   INITIAL_ACCIDENTES_TRABAJO,
   INITIAL_CAMPAMENTO_HABITACIONES,
@@ -37,7 +62,20 @@ import {
   INITIAL_UNIT_TENANTS,
   INITIAL_RESILIENCE_METRICS,
 } from './utils/mockExtendedData';
-import { AccidenteTrabajo, CampamentoHabitacion, EntregaBeneficio, SolicitudAprobacion, UnitTenant, ResilienceMetrics } from './types';
+import {
+  AccidenteTrabajo,
+  CampamentoHabitacion,
+  EntregaBeneficio,
+  SolicitudAprobacion,
+  UnitTenant,
+  ResilienceMetrics,
+  DescansoMedico,
+  PrestamoAyuda,
+  SCTRPoliza,
+  AtencionSocial,
+  VisitaDomiciliaria,
+  BitacoraAuditoria,
+} from './types';
 import { QRAttendancePage } from './pages/QRAttendancePage';
 import { ValuationPage } from './pages/ValuationPage';
 import { RoomDeliveryPage } from './pages/RoomDeliveryPage';
@@ -102,7 +140,7 @@ export function App() {
   const [activeModule, setActiveModule] = useState<ActiveModule>('dashboard');
 
   // Application Data States (Clean / Empty by default, persisted in localStorage)
-  const [workers, setWorkers] = useState<Worker[]>(() => loadFromStorage('ecosem_workers', INITIAL_WORKERS));
+  const [workers, setWorkers] = useState<Worker[]>(() => loadFromStorage('ecosem_workers', MOCK_ENTERPRISE_WORKERS));
   const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>(() => loadFromStorage('ecosem_attendance', INITIAL_ATTENDANCE));
   const [valuations, setValuations] = useState<ValuationItem[]>(() => loadFromStorage('ecosem_valuations', INITIAL_VALUATIONS));
   const [roomHandovers, setRoomHandovers] = useState<RoomHandover[]>(() => loadFromStorage('ecosem_room_handovers', INITIAL_ROOM_HANDOVERS));
@@ -116,7 +154,7 @@ export function App() {
   const [benefitRequests, setBenefitRequests] = useState(() => loadFromStorage('ecosem_benefit_requests', INITIAL_BENEFIT_REQUESTS));
   const [suppliers, setSuppliers] = useState(() => loadFromStorage('ecosem_suppliers', INITIAL_SUPPLIERS));
   const [microcredits, setMicrocredits] = useState(() => loadFromStorage('ecosem_microcredits', INITIAL_MICROCREDITS));
-  const [auditLogs, setAuditLogs] = useState(() => loadFromStorage('ecosem_audit_logs', INITIAL_AUDIT_LOGS));
+  const [auditLogs, setAuditLogs] = useState(() => loadFromStorage('ecosem_audit_logs', MOCK_ENTERPRISE_AUDITORIA));
 
   // Estados para Módulos Operativos Extendidos (Tablas 09 a 12, Multitenant y Resiliencia)
   const [accidentes, setAccidentes] = useState<AccidenteTrabajo[]>(() => loadFromStorage('ecosem_accidentes', INITIAL_ACCIDENTES_TRABAJO));
@@ -127,6 +165,20 @@ export function App() {
   const [currentTenantId, setCurrentTenantId] = useState<string>(() => loadFromStorage('ecosem_current_tenant_id', INITIAL_UNIT_TENANTS[0].id));
   const [resilienceMetrics, setResilienceMetrics] = useState<ResilienceMetrics>(() => loadFromStorage('ecosem_resilience', INITIAL_RESILIENCE_METRICS));
 
+  // Estados Enterprise Nuevos
+  const [descansos, setDescansos] = useState<DescansoMedico[]>(() => loadFromStorage('ecosem_descansos', MOCK_ENTERPRISE_DESCANSOS));
+  const [prestamos, setPrestamos] = useState<PrestamoAyuda[]>(() => loadFromStorage('ecosem_prestamos', MOCK_ENTERPRISE_PRESTAMOS));
+  const [sctrs, setSctrs] = useState<SCTRPoliza[]>(() => loadFromStorage('ecosem_sctrs', MOCK_ENTERPRISE_SCTR));
+  const [atenciones, setAtenciones] = useState<AtencionSocial[]>(() => loadFromStorage('ecosem_atenciones', MOCK_ENTERPRISE_ATENCIONES));
+  const [visitas, setVisitas] = useState<VisitaDomiciliaria[]>(() => loadFromStorage('ecosem_visitas', MOCK_ENTERPRISE_VISITAS));
+
+  // Modals de Control Corporativo
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
+  const [isMfaOpen, setIsMfaOpen] = useState(false);
+  const [isMfaVerified, setIsMfaVerified] = useState(() => loadFromStorage('ecosem_mfa_verified', false));
+  const [isOnline, setIsOnline] = useState(true);
+  const [isHighContrast, setIsHighContrast] = useState(() => loadFromStorage('ecosem_high_contrast', false));
+
   // Persistence Effects
   useEffect(() => { localStorage.setItem('ecosem_accidentes', JSON.stringify(accidentes)); }, [accidentes]);
   useEffect(() => { localStorage.setItem('ecosem_campamentos', JSON.stringify(campamentos)); }, [campamentos]);
@@ -134,6 +186,13 @@ export function App() {
   useEffect(() => { localStorage.setItem('ecosem_solicitudes', JSON.stringify(solicitudes)); }, [solicitudes]);
   useEffect(() => { localStorage.setItem('ecosem_current_tenant_id', JSON.stringify(currentTenantId)); }, [currentTenantId]);
   useEffect(() => { localStorage.setItem('ecosem_resilience', JSON.stringify(resilienceMetrics)); }, [resilienceMetrics]);
+  useEffect(() => { localStorage.setItem('ecosem_descansos', JSON.stringify(descansos)); }, [descansos]);
+  useEffect(() => { localStorage.setItem('ecosem_prestamos', JSON.stringify(prestamos)); }, [prestamos]);
+  useEffect(() => { localStorage.setItem('ecosem_sctrs', JSON.stringify(sctrs)); }, [sctrs]);
+  useEffect(() => { localStorage.setItem('ecosem_atenciones', JSON.stringify(atenciones)); }, [atenciones]);
+  useEffect(() => { localStorage.setItem('ecosem_visitas', JSON.stringify(visitas)); }, [visitas]);
+  useEffect(() => { localStorage.setItem('ecosem_mfa_verified', JSON.stringify(isMfaVerified)); }, [isMfaVerified]);
+  useEffect(() => { localStorage.setItem('ecosem_high_contrast', JSON.stringify(isHighContrast)); }, [isHighContrast]);
 
   // Persistence Effects - Automatically write states to localStorage on change
   useEffect(() => { localStorage.setItem('ecosem_workers', JSON.stringify(workers)); }, [workers]);
@@ -151,6 +210,18 @@ export function App() {
   useEffect(() => { localStorage.setItem('ecosem_suppliers', JSON.stringify(suppliers)); }, [suppliers]);
   useEffect(() => { localStorage.setItem('ecosem_microcredits', JSON.stringify(microcredits)); }, [microcredits]);
   useEffect(() => { localStorage.setItem('ecosem_audit_logs', JSON.stringify(auditLogs)); }, [auditLogs]);
+
+  // Listener para Ctrl + K o Cmd + K (Command Palette)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        setIsCommandPaletteOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   // Handle URL Parameter Routing for direct Room Checkin
   useEffect(() => {
@@ -254,11 +325,14 @@ export function App() {
     // Log audit
     const newLog = {
       id: `AUD-${Date.now().toString().slice(-4)}`,
+      idLog: `AUD-${Date.now().toString().slice(-4)}`,
       timestamp: new Date().toLocaleString(),
       module: 'Asistencia QR',
       action: `Marcación ${serviceType} registrada para ${workerName}${roomNumber ? ` (Habitación ${roomNumber})` : ''}`,
       user: 'Supervisor Escáner',
+      ipAddress: '192.168.10.100',
       hashSignature: `0x${Math.random().toString(16).substring(2, 10)}`,
+      details: `Marcación ${serviceType} registrada para ${workerName}`,
     };
     setAuditLogs([newLog, ...auditLogs]);
   };
@@ -332,6 +406,66 @@ export function App() {
   // Handlers para Módulos Operativos Extendidos
   const currentTenant = tenants.find((t) => t.id === currentTenantId) || tenants[0];
 
+  // Descansos Medicos (03)
+  const handleAddDescanso = (newLeave: DescansoMedico) => setDescansos([newLeave, ...descansos]);
+  const handleUpdateDescanso = (updated: DescansoMedico) =>
+    setDescansos(descansos.map((d) => (d.idDescanso === updated.idDescanso ? updated : d)));
+  const handleDeleteDescanso = (id: string) => {
+    setDescansos(
+      descansos.map((d) =>
+        d.idDescanso === id ? { ...d, deletedAt: new Date().toISOString(), deletedBy: 'Piero Admin' } : d
+      )
+    );
+  };
+
+  // Prestamos y Ayudas (04)
+  const handleAddPrestamo = (newLoan: PrestamoAyuda) => setPrestamos([newLoan, ...prestamos]);
+  const handleUpdatePrestamo = (updated: PrestamoAyuda) =>
+    setPrestamos(prestamos.map((p) => (p.idPrestamo === updated.idPrestamo ? updated : p)));
+  const handleDeletePrestamo = (id: string) => {
+    setPrestamos(
+      prestamos.map((p) =>
+        p.idPrestamo === id ? { ...p, deletedAt: new Date().toISOString(), deletedBy: 'Piero Admin' } : p
+      )
+    );
+  };
+
+  // SCTR Pólizas (05)
+  const handleAddSctr = (newSctr: SCTRPoliza) => setSctrs([newSctr, ...sctrs]);
+  const handleUpdateSctr = (updated: SCTRPoliza) =>
+    setSctrs(sctrs.map((s) => (s.idPoliza === updated.idPoliza ? updated : s)));
+  const handleDeleteSctr = (id: string) => {
+    setSctrs(
+      sctrs.map((s) =>
+        s.idPoliza === id ? { ...s, deletedAt: new Date().toISOString(), deletedBy: 'Piero Admin' } : s
+      )
+    );
+  };
+
+  // Atenciones Sociales (06)
+  const handleAddAtencion = (newAten: AtencionSocial) => setAtenciones([newAten, ...atenciones]);
+  const handleDeleteAtencion = (id: string) => {
+    setAtenciones(
+      atenciones.map((a) =>
+        a.idAtencion === id ? { ...a, deletedAt: new Date().toISOString(), deletedBy: 'Piero Admin' } : a
+      )
+    );
+  };
+
+  // Handler de Sincronización Offline PWA
+  const handleOfflineSyncItem = (tableName: string, actionType: string, decryptedPayload: any) => {
+    try {
+      const data = JSON.parse(decryptedPayload);
+      if (tableName === 'atenciones') {
+        setAtenciones((prev) => [data, ...prev]);
+      } else if (tableName === 'descansos') {
+        setDescansos((prev) => [data, ...prev]);
+      }
+    } catch (e) {
+      console.error('Error sincronizando ítem offline:', e);
+    }
+  };
+
   const handleAddAccident = (newAcc: AccidenteTrabajo) => setAccidentes([newAcc, ...accidentes]);
   const handleUpdateAccident = (updatedAcc: AccidenteTrabajo) =>
     setAccidentes(accidentes.map((a) => (a.idAccidente === updatedAcc.idAccidente ? updatedAcc : a)));
@@ -376,7 +510,9 @@ export function App() {
   const isPortal = activeModule === 'room-checkin-portal';
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100 selection:bg-amber-500 selection:text-slate-950">
+    <div className={`min-h-screen flex flex-col selection:bg-amber-500 selection:text-slate-950 transition-colors ${
+      isHighContrast ? 'bg-black text-white' : 'bg-slate-950 text-slate-100'
+    }`}>
       
       {/* Header Bar */}
       {!isPortal && (
@@ -387,6 +523,13 @@ export function App() {
           tenants={tenants}
           currentTenantId={currentTenantId}
           onTenantChange={setCurrentTenantId}
+          isOnline={isOnline}
+          onToggleOnline={() => setIsOnline(!isOnline)}
+          isHighContrast={isHighContrast}
+          onToggleHighContrast={() => setIsHighContrast(!isHighContrast)}
+          onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
+          isMfaVerified={isMfaVerified}
+          onOpenMfaModal={() => setIsMfaOpen(true)}
         />
       )}
 
@@ -453,6 +596,51 @@ export function App() {
               onTriggerBackup={handleTriggerBackup}
               onToggleFailover={handleToggleFailover}
               onSimulateRTO={handleSimulateRTO}
+            />
+          )}
+
+          {activeModule === 'medical-leaves' && (
+            <MedicalLeaveManagementPage
+              descansos={descansos}
+              workers={workers}
+              onAddDescanso={handleAddDescanso}
+              onUpdateDescanso={handleUpdateDescanso}
+              onDeleteDescanso={handleDeleteDescanso}
+              currentTenantName={currentTenant.name}
+            />
+          )}
+
+          {activeModule === 'loans-assistance' && (
+            <LoansSocialAssistancePage
+              prestamos={prestamos}
+              atenciones={atenciones}
+              visitas={visitas}
+              workers={workers}
+              onAddPrestamo={handleAddPrestamo}
+              onUpdatePrestamo={handleUpdatePrestamo}
+              onDeletePrestamo={handleDeletePrestamo}
+              onAddAtencion={handleAddAtencion}
+              onDeleteAtencion={handleDeleteAtencion}
+              currentTenantName={currentTenant.name}
+            />
+          )}
+
+          {activeModule === 'sctr-management' && (
+            <SCTRManagementPage
+              sctrs={sctrs}
+              workers={workers}
+              onAddSctr={handleAddSctr}
+              onUpdateSctr={handleUpdateSctr}
+              onDeleteSctr={handleDeleteSctr}
+              currentTenantName={currentTenant.name}
+            />
+          )}
+
+          {activeModule === 'predictive-analytics' && (
+            <PredictiveAnalyticsPage
+              workers={workers}
+              descansos={descansos}
+              currentTenantName={currentTenant.name}
             />
           )}
 
@@ -632,6 +820,22 @@ export function App() {
         workers={workers}
         incidents={incidents}
         attendance={attendanceRecords}
+      />
+
+      {/* Enterprise Enterprise Modals */}
+      <CommandPaletteModal
+        isOpen={isCommandPaletteOpen}
+        onClose={() => setIsCommandPaletteOpen(false)}
+        workers={workers}
+        sctrs={sctrs}
+        prestamos={prestamos}
+        onNavigate={setActiveModule}
+      />
+
+      <MFAModal
+        isOpen={isMfaOpen}
+        onClose={() => setIsMfaOpen(false)}
+        onVerifySuccess={() => setIsMfaVerified(true)}
       />
 
     </div>
