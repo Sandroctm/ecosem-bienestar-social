@@ -39,6 +39,8 @@ import { PredictiveAnalyticsPage } from './pages/PredictiveAnalyticsPage';
 import { CommandPaletteModal } from './components/CommandPaletteModal';
 import { MFAModal } from './components/MFAModal';
 import { OfflineSyncStatusBadge } from './components/OfflineSyncStatusBadge';
+import { ErrorBoundary } from './components/ErrorBoundary';
+import { subscribeRealtimeSync } from './utils/realtimeSyncEngine';
 
 import {
   MOCK_ENTERPRISE_WORKERS,
@@ -210,6 +212,21 @@ export function App() {
   useEffect(() => { localStorage.setItem('ecosem_suppliers', JSON.stringify(suppliers)); }, [suppliers]);
   useEffect(() => { localStorage.setItem('ecosem_microcredits', JSON.stringify(microcredits)); }, [microcredits]);
   useEffect(() => { localStorage.setItem('ecosem_audit_logs', JSON.stringify(auditLogs)); }, [auditLogs]);
+
+  // Suscripción al bus en tiempo real (BroadcastChannel Engine)
+  useEffect(() => {
+    const unsubscribe = subscribeRealtimeSync((event) => {
+      console.log(`[Sincro Tiempo Real Recibida]: ${event.action} en tabla ${event.tableName}`);
+      if (event.tableName === 'descansos' && event.payload) {
+        setDescansos((prev) => [event.payload, ...prev.filter((d) => d.idDescanso !== event.payload.idDescanso)]);
+      } else if (event.tableName === 'prestamos' && event.payload) {
+        setPrestamos((prev) => [event.payload, ...prev.filter((p) => p.idPrestamo !== event.payload.idPrestamo)]);
+      } else if (event.tableName === 'workers' && event.payload) {
+        setWorkers((prev) => [event.payload, ...prev.filter((w) => w.id !== event.payload.id)]);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
 
   // Listener para Ctrl + K o Cmd + K (Command Palette)
   useEffect(() => {
@@ -540,6 +557,7 @@ export function App() {
 
         {/* Main Content Area */}
         <main className="flex-1 min-w-0">
+          <ErrorBoundary fallbackModuleName={activeModule}>
           {activeModule === 'dashboard' && (
             <DashboardPage
               requests={benefitRequests}
@@ -787,6 +805,7 @@ export function App() {
               onExportExcel={handleExportCurrentModuleToExcel}
             />
           )}
+          </ErrorBoundary>
         </main>
       </div>
 

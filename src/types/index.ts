@@ -58,6 +58,7 @@ export interface Worker {
   dependents?: DependentMember[];
   deletedAt?: string;
   deletedBy?: string;
+  version_id?: number; // Para Bloqueo Optimista de Concurrencia (Dirty Reads)
 }
 
 export interface AttendanceRecord {
@@ -319,6 +320,7 @@ export interface Room {
   occupantCompany?: string;
   checkInDate?: string;
   lastLinenChangeDate: string; // YYYY-MM-DD
+  version_id?: number; // Para Bloqueo Optimista de Concurrencia
 }
 
 export interface Pabellon {

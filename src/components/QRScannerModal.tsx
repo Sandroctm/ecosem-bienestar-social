@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Html5QrcodeScanner } from 'html5-qrcode';
 import { QRCodeSVG } from 'qrcode.react';
-import { X, CheckCircle2, QrCode, Smartphone, Sparkles, UserCheck, Camera, Layers } from 'lucide-react';
+import { X, CheckCircle2, QrCode, Smartphone, Sparkles, UserCheck, Camera, Layers, ShieldAlert } from 'lucide-react';
 import { Worker } from '../types';
 import { getQrBaseUrl } from '../App';
+import { sanitizeAndValidateQRPayload } from '../utils/qrPayloadSanitizer';
 
 interface QRScannerModalProps {
   workers: Worker[];
@@ -28,6 +29,10 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({
   const [manualDni, setManualDni] = useState('');
   const [feedbackMsg, setFeedbackMsg] = useState<string | null>(null);
   const [selectedWorkerForVirtualQR, setSelectedWorkerForVirtualQR] = useState<Worker | null>(null);
+
+  // Debounce Lock y prevención de Memory Leaks
+  const lastScanTimestampRef = useRef<number>(0);
+  const isProcessingRef = useRef<boolean>(false);
 
   useEffect(() => {
     if (workers.length > 0 && !selectedWorkerForVirtualQR) {
@@ -74,38 +79,68 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({
     }
 
     return () => {
+      // Destrucción explícita para evitar Memory Leaks en dispositivos móviles
       if (scanner) {
         scanner.clear().catch(() => {});
+      }
+
+      // Detener cualquier stream de cámara remanente en el navegador
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        navigator.mediaDevices.getUserMedia({ video: true }).then((stream) => {
+          stream.getTracks().forEach((track) => track.stop());
+        }).catch(() => {});
       }
     };
   }, [isOpen, activeTab, selectedService]);
 
-  const handleProcessScan = (dni: string) => {
-    const foundWorker = workers.find((w) => w.dni === dni || w.qrCodeValue.includes(dni));
+  const handleProcessScan = (rawInput: string) => {
+    const now = Date.now();
+    // Bloqueo Debounce Lock de 2 segundos para erradicar el Double Submit Hazard
+    if (isProcessingRef.current || now - lastScanTimestampRef.current < 2000) {
+      console.log('[QR Debounce Lock] Lectura consecutiva bloqueada (< 2000ms)');
+      return;
+    }
+
+    // Sanitización anti-XSS / anti-SQLi
+    const sanitized = sanitizeAndValidateQRPayload(rawInput);
+    if (!sanitized.isValid) {
+      setFeedbackMsg(sanitized.errorMessage || 'QR inválido');
+      setTimeout(() => setFeedbackMsg(null), 3000);
+      return;
+    }
+
+    isProcessingRef.current = true;
+    lastScanTimestampRef.current = now;
+
+    const targetDni = sanitized.workerDni || sanitized.sanitizedValue;
+    const foundWorker = workers.find((w) => w.dni === targetDni || w.qrCodeValue.includes(targetDni));
+
     if (foundWorker) {
       setLastScannedWorker(foundWorker);
       onScanSuccess(foundWorker.dni, 'Ingreso Campamento', foundWorker.roomNumber);
-      setFeedbackMsg(`¡Asistencia de INGRESO A CAMPAMENTO REGISTRADA CON ÉXITO!${foundWorker.roomNumber ? ` (Habitación: ${foundWorker.roomNumber})` : ''}`);
-      setTimeout(() => setFeedbackMsg(null), 3000);
+      setFeedbackMsg(`¡Asistencia de INGRESO REGISTRADA CON ÉXITO!${foundWorker.roomNumber ? ` (Hab: ${foundWorker.roomNumber})` : ''}`);
     } else {
-      // Allow registering even if worker is entered by DNI
       const fallbackWorker: Worker = {
         id: `W-SCAN-${Date.now().toString().slice(-4)}`,
-        dni: dni,
-        fullName: `Trabajador DNI ${dni}`,
+        dni: targetDni,
+        fullName: `Trabajador DNI ${targetDni}`,
         company: 'ECOSEM Contratistas',
         role: 'Personal General',
         camp: 'Campamento Central',
         photoUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=250',
         phoneWhatsApp: '51900000000',
         status: 'Activo',
-        qrCodeValue: `ECOSEM:${dni}:REGISTRADO`,
+        qrCodeValue: `ECOSEM:${targetDni}:REGISTRADO`,
       };
       setLastScannedWorker(fallbackWorker);
-      onScanSuccess(dni, 'Ingreso Campamento');
-      setFeedbackMsg(`¡Asistencia de INGRESO A CAMPAMENTO REGISTRADA CON ÉXITO para DNI ${dni}!`);
-      setTimeout(() => setFeedbackMsg(null), 3000);
+      onScanSuccess(targetDni, 'Ingreso Campamento');
+      setFeedbackMsg(`¡Asistencia REGISTRADA para DNI ${targetDni}!`);
     }
+
+    setTimeout(() => {
+      setFeedbackMsg(null);
+      isProcessingRef.current = false;
+    }, 2000);
   };
 
   const handleManualSubmit = (e: React.FormEvent) => {

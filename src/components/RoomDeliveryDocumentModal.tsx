@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, Printer, Download, CheckCircle, FileText, Pickaxe, Upload, Camera, Plus, Trash2 } from 'lucide-react';
 import { RoomHandover, Worker, CustomRoomItem } from '../types';
+import { useFormDraft, clearFormDraft } from '../utils/formDraftEngine';
 
 interface RoomDeliveryDocumentModalProps {
   handover: RoomHandover | null;
@@ -56,6 +57,9 @@ export const RoomDeliveryDocumentModal: React.FC<RoomDeliveryDocumentModalProps>
       status: 'Entregado',
     }
   );
+
+  // Auto-guardado en borrador y advertencia de cierre (beforeunload)
+  useFormDraft('room_delivery_form', formData, setFormData, true);
 
   // New Custom Item inputs
   const [newCustomItemName, setNewCustomItemName] = useState('');
@@ -522,6 +526,7 @@ export const RoomDeliveryDocumentModal: React.FC<RoomDeliveryDocumentModalProps>
         <div className="flex justify-end gap-3 pt-2 border-t border-slate-800 no-print">
           <button
             onClick={() => {
+              clearFormDraft('room_delivery_form');
               onSaveHandover(formData);
               onClose();
             }}
