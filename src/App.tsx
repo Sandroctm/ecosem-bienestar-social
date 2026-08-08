@@ -43,6 +43,7 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import { DatabaseSyncModal } from './components/DatabaseSyncModal';
 import { subscribeRealtimeSync, broadcastMutation } from './utils/realtimeSyncEngine';
 import { fetchStateFromCloudServer } from './utils/databaseStateEngine';
+import { pushAttendanceRecordToCloud, fetchLiveCloudAttendanceRecords } from './utils/cloudSyncRelay';
 
 import {
   MOCK_ENTERPRISE_WORKERS,
@@ -258,6 +259,41 @@ export function App() {
     }).catch(() => {});
   }, []);
 
+  // Loop de Sincronización Automática de Marcaciones Celular -> PC (Tiempo Real 2.5s)
+  useEffect(() => {
+    const syncFromCloud = async () => {
+      const cloudRecords = await fetchLiveCloudAttendanceRecords();
+      if (cloudRecords.length > 0) {
+        setAttendanceRecords((prev) => {
+          const existingIds = new Set(prev.map((r) => r.id));
+          const newFromCloud = cloudRecords.filter((r) => !existingIds.has(r.id));
+          if (newFromCloud.length > 0) {
+            console.log(`[Cloud Sync Relay] ¡Nuevas marcaciones recibidas desde celular!: ${newFromCloud.length}`);
+            return [...newFromCloud, ...prev];
+          }
+          return prev;
+        });
+      }
+    };
+
+    const interval = setInterval(syncFromCloud, 2500);
+
+    const handleCloudEvent = (e: Event) => {
+      const customEv = e as CustomEvent<AttendanceRecord>;
+      if (customEv.detail) {
+        const newRec = customEv.detail;
+        setAttendanceRecords((prev) => [newRec, ...prev.filter((r) => r.id !== newRec.id)]);
+      }
+    };
+
+    window.addEventListener('ecosem_cloud_attendance_event', handleCloudEvent);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('ecosem_cloud_attendance_event', handleCloudEvent);
+    };
+  }, []);
+
   // Listener para Ctrl + K o Cmd + K (Command Palette)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -373,6 +409,7 @@ export function App() {
 
     setAttendanceRecords((prev) => [newRecord, ...prev]);
     broadcastMutation('ecosem_attendance', 'INSERT', newRecord);
+    pushAttendanceRecordToCloud(newRecord).catch(() => {});
 
     // Send to Google Sheets Webhook in background if configured
     sendToGoogleSheets(newRecord).catch((err) => console.error('Error auto-syncing sheets:', err));
