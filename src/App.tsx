@@ -40,7 +40,9 @@ import { CommandPaletteModal } from './components/CommandPaletteModal';
 import { MFAModal } from './components/MFAModal';
 import { OfflineSyncStatusBadge } from './components/OfflineSyncStatusBadge';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { DatabaseSyncModal } from './components/DatabaseSyncModal';
 import { subscribeRealtimeSync } from './utils/realtimeSyncEngine';
+import { fetchStateFromCloudServer } from './utils/databaseStateEngine';
 
 import {
   MOCK_ENTERPRISE_WORKERS,
@@ -180,6 +182,22 @@ export function App() {
   const [isMfaVerified, setIsMfaVerified] = useState(() => loadFromStorage('ecosem_mfa_verified', false));
   const [isOnline, setIsOnline] = useState(true);
   const [isHighContrast, setIsHighContrast] = useState(() => loadFromStorage('ecosem_high_contrast', false));
+  const [isDbSyncModalOpen, setIsDbSyncModalOpen] = useState(false);
+
+  // Recargar todos los estados desde localStorage tras importar un respaldo o sincronizar desde la nube
+  const handleReloadAllState = () => {
+    setWorkers(loadFromStorage('ecosem_workers', MOCK_ENTERPRISE_WORKERS));
+    setDescansos(loadFromStorage('ecosem_descansos', MOCK_ENTERPRISE_DESCANSOS));
+    setPrestamos(loadFromStorage('ecosem_prestamos', MOCK_ENTERPRISE_PRESTAMOS));
+    setSctrs(loadFromStorage('ecosem_sctrs', MOCK_ENTERPRISE_SCTR));
+    setAtenciones(loadFromStorage('ecosem_atenciones', MOCK_ENTERPRISE_ATENCIONES));
+    setVisitas(loadFromStorage('ecosem_visitas', MOCK_ENTERPRISE_VISITAS));
+    setAccidentes(loadFromStorage('ecosem_accidentes', INITIAL_ACCIDENTES_TRABAJO));
+    setCampamentos(loadFromStorage('ecosem_campamentos', INITIAL_CAMPAMENTO_HABITACIONES));
+    setEntregas(loadFromStorage('ecosem_entregas', INITIAL_ENTREGAS_BENEFICIOS));
+    setSolicitudes(loadFromStorage('ecosem_solicitudes', INITIAL_SOLICITUDES_APROBACIONES));
+    setRooms(loadFromStorage('ecosem_rooms', INITIAL_ROOMS));
+  };
 
   // Persistence Effects
   useEffect(() => { localStorage.setItem('ecosem_accidentes', JSON.stringify(accidentes)); }, [accidentes]);
@@ -226,6 +244,16 @@ export function App() {
       }
     });
     return () => unsubscribe();
+  }, []);
+
+  // Intentar sincronización remota desde la nube al arrancar en cualquier PC
+  useEffect(() => {
+    fetchStateFromCloudServer().then((res) => {
+      if (res.success) {
+        console.log('[Cloud Startup Sync] Datos del sistema restaurados desde la Nube.');
+        handleReloadAllState();
+      }
+    }).catch(() => {});
   }, []);
 
   // Listener para Ctrl + K o Cmd + K (Command Palette)
@@ -547,6 +575,7 @@ export function App() {
           onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
           isMfaVerified={isMfaVerified}
           onOpenMfaModal={() => setIsMfaOpen(true)}
+          onOpenDbSyncModal={() => setIsDbSyncModalOpen(true)}
         />
       )}
 
@@ -855,6 +884,12 @@ export function App() {
         isOpen={isMfaOpen}
         onClose={() => setIsMfaOpen(false)}
         onVerifySuccess={() => setIsMfaVerified(true)}
+      />
+
+      <DatabaseSyncModal
+        isOpen={isDbSyncModalOpen}
+        onClose={() => setIsDbSyncModalOpen(false)}
+        onDataRestored={handleReloadAllState}
       />
 
     </div>

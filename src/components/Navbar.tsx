@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShieldCheck, Download, Smartphone, UserPlus, Building, Lock, Server, Key, Eye, HelpCircle, Laptop } from 'lucide-react';
+import { ShieldCheck, Download, Smartphone, UserPlus, Building, Lock, Server, Key, Eye, HelpCircle, Laptop, Cloud } from 'lucide-react';
 import { ActiveModule, UnitTenant } from '../types';
 
 interface NavbarProps {
@@ -18,6 +18,7 @@ interface NavbarProps {
   onOpenCommandPalette?: () => void;
   isMfaVerified?: boolean;
   onOpenMfaModal?: () => void;
+  onOpenDbSyncModal?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -34,6 +35,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenCommandPalette,
   isMfaVerified = false,
   onOpenMfaModal,
+  onOpenDbSyncModal,
 }) => {
   return (
     <header className={`sticky top-0 z-30 w-full border-b px-4 py-2.5 transition-colors ${
@@ -94,6 +96,16 @@ export const Navbar: React.FC<NavbarProps> = ({
           >
             <span>Buscar</span>
             <kbd className="px-1 py-0.5 bg-slate-800 text-[9px] rounded font-mono border border-slate-700">Ctrl+K</kbd>
+          </button>
+
+          {/* Database Backup & Cloud Sync Button */}
+          <button
+            onClick={onOpenDbSyncModal}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600/20 border border-emerald-500/40 text-xs font-bold text-emerald-300 hover:bg-emerald-600/30 transition shadow-sm"
+            title="Respaldar, descargar o cargar base de datos en otra PC"
+          >
+            <Cloud className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
+            <span className="hidden sm:inline">Respaldar / Cargar DB</span>
           </button>
 
           {/* High Contrast Theme Switch */}
