@@ -179,10 +179,10 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({
       const fallbackWorker: Worker = {
         id: `W-SCAN-${Date.now().toString(36)}`,
         dni: targetDni,
-        fullName: `Trabajador DNI ${targetDni}`,
-        company: 'ECOSEM Contratistas',
+        fullName: `Personal DNI ${targetDni}`,
+        company: 'ECOSEM Contratista',
         role: 'Personal General',
-        camp: 'Campamento Central',
+        camp: 'Sede Morococha - Unidad Toromocho',
         photoUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=250',
         phoneWhatsApp: '51900000000',
         status: 'Activo',

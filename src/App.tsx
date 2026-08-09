@@ -386,9 +386,9 @@ export function App() {
       (w) => w.dni === workerDni || w.dni === cleanInput || w.qrCodeValue.includes(cleanInput) || w.id === cleanInput
     );
 
-    const workerName = worker ? worker.fullName : `Trabajador DNI ${workerDni}`;
-    const company = worker ? worker.company : 'Contratista';
-    const camp = worker ? worker.camp : 'Campamento Minero';
+    const workerName = worker ? worker.fullName : (dniMatch || /^\d{8}$/.test(workerDni) ? `Personal DNI ${workerDni}` : workerDni);
+    const company = worker ? worker.company : 'ECOSEM Contratista';
+    const camp = worker ? worker.camp : 'Sede Morococha - Unidad Toromocho';
 
     const newRecord: AttendanceRecord = {
       id: `ATT-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,

@@ -44,6 +44,7 @@ export const QRAttendancePage: React.FC<QRAttendancePageProps> = ({
   const [selectedWorkerForBadge, setSelectedWorkerForBadge] = useState<Worker | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [serviceFilter, setServiceFilter] = useState<string>('Todos');
+  const [campFilter, setCampFilter] = useState<string>('Todos');
   const [quickDniInput, setQuickDniInput] = useState('');
   const [quickServiceType, setQuickServiceType] = useState<'Almuerzo' | 'Cena' | 'Alojamiento' | 'Ingreso Campamento' | 'Desayuno'>('Almuerzo');
   const [pendingValidation, setPendingValidation] = useState<AttendanceValidationResult | null>(null);
@@ -74,7 +75,8 @@ export const QRAttendancePage: React.FC<QRAttendancePageProps> = ({
       rec.workerDni.includes(searchTerm) ||
       rec.company.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesService = serviceFilter === 'Todos' || rec.serviceType === serviceFilter;
-    return matchesSearch && matchesService;
+    const matchesCamp = campFilter === 'Todos' || rec.camp.toLowerCase().includes(campFilter.toLowerCase());
+    return matchesSearch && matchesService && matchesCamp;
   });
 
   return (
@@ -226,9 +228,23 @@ export const QRAttendancePage: React.FC<QRAttendancePageProps> = ({
             </div>
 
             <select
+              value={campFilter}
+              onChange={(e) => setCampFilter(e.target.value)}
+              className="py-1.5 px-3 text-xs bg-slate-900 border border-slate-800 rounded-lg text-slate-200 font-semibold"
+            >
+              <option value="Todos">Todos los Campamentos</option>
+              <option value="Sede Morococha">Sede Morococha - Toromocho</option>
+              <option value="Soledad">Campamento Soledad</option>
+              <option value="Diana">Campamento Diana</option>
+              <option value="Central">Campamento Central</option>
+              <option value="Carhuacoto">Campamento Carhuacoto</option>
+              <option value="Tuctu">Campamento Tuctu</option>
+            </select>
+
+            <select
               value={serviceFilter}
               onChange={(e) => setServiceFilter(e.target.value)}
-              className="py-1.5 px-3 text-xs bg-slate-900 border border-slate-800 rounded-lg text-slate-200"
+              className="py-1.5 px-3 text-xs bg-slate-900 border border-slate-800 rounded-lg text-slate-200 font-semibold"
             >
               <option value="Todos">Todos los Servicios</option>
               <option value="Desayuno">Desayuno</option>
@@ -255,22 +271,30 @@ export const QRAttendancePage: React.FC<QRAttendancePageProps> = ({
             </thead>
             <tbody className="divide-y divide-slate-800/60">
               {filteredRecords.length > 0 ? (
-                filteredRecords.map((rec) => (
-                  <tr key={rec.id} className="hover:bg-slate-900/60 transition-colors">
-                    <td className="p-3 font-mono text-slate-400">{rec.timestamp}</td>
-                    <td className="p-3 font-bold text-amber-400">{rec.workerDni}</td>
-                    <td className="p-3 font-semibold text-slate-100">{rec.workerName}</td>
-                    <td className="p-3 text-slate-400">{rec.company}</td>
-                    <td className="p-3 text-slate-300">{rec.camp}</td>
+                filteredRecords.map((rec) => {
+                  const matchedWorker = workers.find((w) => w.dni === rec.workerDni);
+                  const displayName = matchedWorker ? matchedWorker.fullName : rec.workerName;
+                  const displayCompany = matchedWorker ? matchedWorker.company : rec.company;
+                  const displayCamp = matchedWorker ? matchedWorker.camp : rec.camp;
+
+                  return (
+                    <tr key={rec.id} className="hover:bg-slate-900/60 transition-colors">
+                      <td className="p-3 font-mono text-slate-400">{rec.timestamp}</td>
+                      <td className="p-3 font-bold text-amber-400 font-mono">{rec.workerDni}</td>
+                      <td className="p-3 font-semibold text-slate-100">{displayName}</td>
+                      <td className="p-3 text-slate-400">{displayCompany}</td>
+                      <td className="p-3 text-slate-300 font-semibold">{displayCamp}</td>
                     <td className="p-3 font-bold text-amber-300">{rec.serviceType}</td>
-                    <td className="p-3 text-slate-400">{rec.scannedBy}</td>
-                    <td className="p-3">
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-extrabold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                        <CheckCircle2 className="w-3 h-3" /> {rec.status}
-                      </span>
-                    </td>
-                  </tr>
-                ))
+                      <td className="p-3 font-bold text-amber-300">{rec.serviceType}</td>
+                      <td className="p-3 text-slate-400">{rec.scannedBy}</td>
+                      <td className="p-3">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-extrabold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                          <CheckCircle2 className="w-3 h-3" /> {rec.status}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })
               ) : (
                 <tr>
                   <td colSpan={8} className="p-8 text-center text-slate-400 space-y-2">
