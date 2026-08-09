@@ -292,10 +292,14 @@ export const MOCK_ENTERPRISE_SOLICITUDES: SolicitudAprobacionEnterprise[] = [
 ];
 
 // Seed de Marcaciones de Asistencia en Tiempo Real (Módulos Asistencia y Comedores)
+// Los registros de ejemplo son de AYER para no bloquear nuevas marcaciones de hoy
+const yesterday = new Date(Date.now() - 86400000);
+const yesterdayBase = yesterday.toLocaleDateString('es-PE');
+
 export const MOCK_ENTERPRISE_ATTENDANCE: any[] = [
   {
     id: 'ATT-2026-001',
-    timestamp: new Date().toLocaleDateString('es-PE') + ', 12:30:15',
+    timestamp: `${yesterdayBase}, 12:30:15`,
     workerDni: '45871236',
     workerName: 'Juan Pérez Quispe',
     company: 'ECOSEM PUCARA',
@@ -307,7 +311,7 @@ export const MOCK_ENTERPRISE_ATTENDANCE: any[] = [
   },
   {
     id: 'ATT-2026-002',
-    timestamp: new Date().toLocaleDateString('es-PE') + ', 12:25:40',
+    timestamp: `${yesterdayBase}, 12:25:40`,
     workerDni: '71234567',
     workerName: 'María Rodríguez Fernández',
     company: 'CONTRATISTAS MINEROS SAC',
@@ -319,7 +323,7 @@ export const MOCK_ENTERPRISE_ATTENDANCE: any[] = [
   },
   {
     id: 'ATT-2026-003',
-    timestamp: new Date().toLocaleDateString('es-PE') + ', 08:15:10',
+    timestamp: `${yesterdayBase}, 08:15:10`,
     workerDni: '32569874',
     workerName: 'Carlos Mota Lazo',
     company: 'MINERA CHINALCO',
@@ -331,7 +335,7 @@ export const MOCK_ENTERPRISE_ATTENDANCE: any[] = [
   },
   {
     id: 'ATT-2026-004',
-    timestamp: new Date().toLocaleDateString('es-PE') + ', 07:45:00',
+    timestamp: `${yesterdayBase}, 07:45:00`,
     workerDni: '45871236',
     workerName: 'Juan Pérez Quispe',
     company: 'ECOSEM PUCARA',
@@ -343,7 +347,7 @@ export const MOCK_ENTERPRISE_ATTENDANCE: any[] = [
   },
   {
     id: 'ATT-2026-005',
-    timestamp: new Date().toLocaleDateString('es-PE') + ', 07:30:22',
+    timestamp: `${yesterdayBase}, 07:30:22`,
     workerDni: '71234567',
     workerName: 'María Rodríguez Fernández',
     company: 'CONTRATISTAS MINEROS SAC',
@@ -355,7 +359,7 @@ export const MOCK_ENTERPRISE_ATTENDANCE: any[] = [
   },
   {
     id: 'ATT-2026-006',
-    timestamp: new Date().toLocaleDateString('es-PE') + ', 06:50:00',
+    timestamp: `${yesterdayBase}, 06:50:00`,
     workerDni: '32569874',
     workerName: 'Carlos Mota Lazo',
     company: 'MINERA CHINALCO',

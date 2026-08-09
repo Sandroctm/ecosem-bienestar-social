@@ -397,8 +397,8 @@ export function App() {
     const camp = worker ? worker.camp : 'Campamento Minero';
 
     const newRecord: AttendanceRecord = {
-      id: `ATT-${Date.now().toString().slice(-4)}`,
-      timestamp: new Date().toLocaleString(),
+      id: `ATT-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      timestamp: new Date().toLocaleString('es-PE', { timeZone: 'America/Lima' }),
       workerDni,
       workerName,
       company,

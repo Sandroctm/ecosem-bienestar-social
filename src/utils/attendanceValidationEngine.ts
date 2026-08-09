@@ -32,15 +32,16 @@ export function validateAttendanceCheckin(
     (w) => w.dni === targetDni || w.dni === cleanDni || w.qrCodeValue.includes(cleanDni) || w.id === cleanDni
   );
 
-  const todayStr = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+  const todayStr = new Date().toLocaleDateString('es-PE'); // "9/8/2026"
 
   // 1. Validar Duplicidad de Ración / Marcación en el mismo día y mismo servicio
   const existingRecordToday = attendanceRecords.find((rec) => {
-    const recDate = rec.timestamp.includes('/')
-      ? rec.timestamp.split(',')[0]
-      : rec.timestamp.split(' ')[0];
-    const isSameDay = recDate.includes(todayStr) || rec.timestamp.includes(new Date().toLocaleDateString('es-PE'));
-    return rec.workerDni === targetDni && rec.serviceType === serviceType;
+    // Comparar contra el día de hoy en formato local del navegador
+    const recTimestamp = rec.timestamp || '';
+    const isSameDay =
+      recTimestamp.includes(todayStr) ||
+      recTimestamp.startsWith(new Date().toISOString().split('T')[0]);
+    return rec.workerDni === targetDni && rec.serviceType === serviceType && isSameDay;
   });
 
   if (existingRecordToday) {

@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Html5QrcodeScanner, Html5Qrcode } from 'html5-qrcode';
 import { QRCodeSVG } from 'qrcode.react';
 import { X, CheckCircle2, QrCode, Smartphone, Sparkles, UserCheck, Camera, Layers, ShieldAlert, Utensils, BedDouble, LogIn, Coffee, Upload, FileImage, Zap } from 'lucide-react';
 import { Worker, AttendanceRecord } from '../types';
 import { getQrBaseUrl } from '../App';
 import { sanitizeAndValidateQRPayload } from '../utils/qrPayloadSanitizer';
+import { validateAttendanceCheckin } from '../utils/attendanceValidationEngine';
 
 interface QRScannerModalProps {
   workers: Worker[];
@@ -20,6 +21,7 @@ interface QRScannerModalProps {
 
 export const QRScannerModal: React.FC<QRScannerModalProps> = ({
   workers,
+  attendanceRecords = [],
   isOpen,
   onClose,
   onScanSuccess,
@@ -105,15 +107,8 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({
       if (scanner) {
         scanner.clear().catch(() => {});
       }
-
-      // Detener cualquier stream de cámara remanente en el navegador
-      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        navigator.mediaDevices.getUserMedia({ video: true }).then((stream) => {
-          stream.getTracks().forEach((track) => track.stop());
-        }).catch(() => {});
-      }
     };
-  }, [isOpen, activeTab, selectedService]);
+  }, [isOpen, activeTab]);
 
   const playAudioBeep = () => {
     try {
@@ -132,7 +127,7 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({
     } catch (e) {}
   };
 
-  const handleProcessScan = (rawInput: string) => {
+  const handleProcessScan = useCallback((rawInput: string) => {
     const now = Date.now();
     // Bloqueo Debounce Lock de 2 segundos para erradicar el Double Submit Hazard
     if (isProcessingRef.current || now - lastScanTimestampRef.current < 2000) {
@@ -156,19 +151,33 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({
     const dniMatch = cleanStr.match(/\b\d{8}\b/);
     const targetDni = dniMatch ? dniMatch[0] : (sanitized.workerDni || cleanStr);
 
+    // Validación Anti-Fraude: SCTR, Descanso Médico, Duplicados
+    const validation = validateAttendanceCheckin(targetDni, selectedService, workers, attendanceRecords);
+
     const foundWorker = workers.find(
       (w) => w.dni === targetDni || w.dni === cleanStr || w.qrCodeValue.includes(targetDni) || w.id === targetDni
     );
 
     playAudioBeep();
 
+    if (!validation.allowed) {
+      // Mostrar alerta de bloqueo pero NO registrar
+      setLastScannedWorker(foundWorker || null);
+      setFeedbackMsg(`⛔ BLOQUEADO: ${validation.message}`);
+      setTimeout(() => {
+        setFeedbackMsg(null);
+        isProcessingRef.current = false;
+      }, 4000);
+      return;
+    }
+
     if (foundWorker) {
       setLastScannedWorker(foundWorker);
       onScanSuccess(foundWorker.dni, selectedService, foundWorker.roomNumber);
-      setFeedbackMsg(`¡MARCACIÓN EXITOSA! ${foundWorker.fullName} (${foundWorker.company}) - Servicio: ${selectedService}`);
+      setFeedbackMsg(`✅ ¡MARCACIÓN ÉXITOSA! ${foundWorker.fullName} (${foundWorker.company}) - Servicio: ${selectedService}`);
     } else {
       const fallbackWorker: Worker = {
-        id: `W-SCAN-${Date.now().toString().slice(-4)}`,
+        id: `W-SCAN-${Date.now().toString(36)}`,
         dni: targetDni,
         fullName: `Trabajador DNI ${targetDni}`,
         company: 'ECOSEM Contratistas',
@@ -181,14 +190,14 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({
       };
       setLastScannedWorker(fallbackWorker);
       onScanSuccess(targetDni, selectedService);
-      setFeedbackMsg(`¡MARCACIÓN REGISTRADA! DNI ${targetDni} marcado en ${selectedService}.`);
+      setFeedbackMsg(`✅ ¡MARCACIÓN ÉXITOSA! DNI ${targetDni} marcado en ${selectedService}.`);
     }
 
     setTimeout(() => {
       setFeedbackMsg(null);
       isProcessingRef.current = false;
-    }, 2000);
-  };
+    }, 2500);
+  }, [workers, attendanceRecords, selectedService, onScanSuccess]);
 
   const handleManualSubmit = (e: React.FormEvent) => {
     e.preventDefault();
