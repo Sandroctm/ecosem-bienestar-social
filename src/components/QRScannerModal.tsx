@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Html5QrcodeScanner } from 'html5-qrcode';
+import { Html5QrcodeScanner, Html5Qrcode } from 'html5-qrcode';
 import { QRCodeSVG } from 'qrcode.react';
-import { X, CheckCircle2, QrCode, Smartphone, Sparkles, UserCheck, Camera, Layers, ShieldAlert, Utensils, BedDouble, LogIn, Coffee } from 'lucide-react';
+import { X, CheckCircle2, QrCode, Smartphone, Sparkles, UserCheck, Camera, Layers, ShieldAlert, Utensils, BedDouble, LogIn, Coffee, Upload, FileImage, Zap } from 'lucide-react';
 import { Worker, AttendanceRecord } from '../types';
 import { getQrBaseUrl } from '../App';
 import { sanitizeAndValidateQRPayload } from '../utils/qrPayloadSanitizer';
@@ -24,7 +24,7 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({
   onClose,
   onScanSuccess,
 }) => {
-  const [activeTab, setActiveTab] = useState<'camera' | 'virtual'>('camera');
+  const [activeTab, setActiveTab] = useState<'camera' | 'upload' | 'virtual' | 'demo'>('camera');
   const [selectedService, setSelectedService] = useState<'Almuerzo' | 'Cena' | 'Alojamiento' | 'Ingreso Campamento' | 'Desayuno'>('Ingreso Campamento');
   const [lastScannedWorker, setLastScannedWorker] = useState<Worker | null>(null);
   const [manualDni, setManualDni] = useState('');
@@ -34,6 +34,27 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({
   // Debounce Lock y prevención de Memory Leaks
   const lastScanTimestampRef = useRef<number>(0);
   const isProcessingRef = useRef<boolean>(false);
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const html5QrCode = new Html5Qrcode('reader-hidden');
+      const decodedText = await html5QrCode.scanFile(file, true);
+      let dniScanned = decodedText;
+      if (decodedText.includes('?')) {
+        const urlParams = new URLSearchParams(decodedText.split('?')[1]);
+        const dni = urlParams.get('dni');
+        if (dni) dniScanned = dni;
+      }
+      handleProcessScan(dniScanned);
+    } catch (err: any) {
+      console.warn('Error decodificando imagen QR:', err);
+      setFeedbackMsg('⚠️ No se detectó código QR en la foto cargada. Asegúrese de que la imagen sea clara.');
+      setTimeout(() => setFeedbackMsg(null), 3500);
+    }
+  };
 
   useEffect(() => {
     if (workers.length > 0 && !selectedWorkerForVirtualQR) {
@@ -203,29 +224,54 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({
           </button>
         </div>
 
-        {/* Tab switcher: Camera vs Virtual QR */}
-        <div className="flex gap-2 bg-slate-950 p-1 rounded-xl border border-slate-800">
+        {/* Conmutador de 4 Modos de Marcación */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800 text-[11px] font-bold">
           <button
             onClick={() => setActiveTab('camera')}
-            className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition-all ${
+            className={`py-1.5 px-2 rounded-lg flex items-center justify-center gap-1.5 transition ${
               activeTab === 'camera'
-                ? 'bg-amber-500 text-slate-950 shadow-md'
+                ? 'bg-amber-500 text-slate-950 font-black shadow'
                 : 'text-slate-400 hover:text-slate-200'
             }`}
           >
             <Camera className="w-3.5 h-3.5" />
-            Cámara Web Directa
+            Cámara
           </button>
+
+          <button
+            onClick={() => setActiveTab('upload')}
+            className={`py-1.5 px-2 rounded-lg flex items-center justify-center gap-1.5 transition ${
+              activeTab === 'upload'
+                ? 'bg-amber-500 text-slate-950 font-black shadow'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <Upload className="w-3.5 h-3.5" />
+            Subir Foto
+          </button>
+
+          <button
+            onClick={() => setActiveTab('demo')}
+            className={`py-1.5 px-2 rounded-lg flex items-center justify-center gap-1.5 transition ${
+              activeTab === 'demo'
+                ? 'bg-amber-500 text-slate-950 font-black shadow'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <Zap className="w-3.5 h-3.5" />
+            Demo 1-Clic
+          </button>
+
           <button
             onClick={() => setActiveTab('virtual')}
-            className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition-all ${
+            className={`py-1.5 px-2 rounded-lg flex items-center justify-center gap-1.5 transition ${
               activeTab === 'virtual'
-                ? 'bg-amber-500 text-slate-950 shadow-md'
+                ? 'bg-amber-500 text-slate-950 font-black shadow'
                 : 'text-slate-400 hover:text-slate-200'
             }`}
           >
             <QrCode className="w-3.5 h-3.5" />
-            Generador / Pase QR Visible
+            Pases QR
           </button>
         </div>
 
@@ -274,11 +320,67 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({
           </div>
         )}
 
-        {/* MODE 1: Camera scanner */}
+        {/* MODO 1: Cámara Web Directa */}
         {activeTab === 'camera' && (
           <div className="bg-slate-950 p-3 rounded-xl border border-slate-800 text-center space-y-2">
-            <div id="reader" className="overflow-hidden rounded-lg min-h-[160px] flex flex-col justify-center"></div>
-            <p className="text-[11px] text-slate-400">Apunte el fotocheck o pase QR a la cámara</p>
+            <div id="reader" className="overflow-hidden rounded-lg min-h-[180px] flex flex-col justify-center"></div>
+            <p className="text-[11px] text-slate-400">Apunte el fotocheck o pase QR a la cámara del dispositivo</p>
+          </div>
+        )}
+
+        {/* MODO 2: Subir Foto / Imagen de Galería */}
+        {activeTab === 'upload' && (
+          <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 text-center space-y-4">
+            <div id="reader-hidden" className="hidden"></div>
+            <div className="p-6 border-2 border-dashed border-slate-700 hover:border-amber-500 rounded-2xl bg-slate-900/50 space-y-3 transition">
+              <FileImage className="w-10 h-10 text-amber-400 mx-auto animate-pulse" />
+              <div>
+                <h4 className="text-xs font-black text-slate-100 uppercase">Cargar Foto de Fotocheck o Captura QR</h4>
+                <p className="text-[10px] text-slate-400 mt-1">
+                  Si la cámara no abre en su celular, tome una foto del código QR o elija una captura de su galería.
+                </p>
+              </div>
+              <label className="inline-flex items-center gap-2 px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black rounded-xl cursor-pointer shadow-lg transition">
+                <Upload className="w-4 h-4" />
+                <span>Seleccionar Imagen QR</span>
+                <input type="file" accept="image/*" onChange={handleFileUpload} className="hidden" />
+              </label>
+            </div>
+          </div>
+        )}
+
+        {/* MODO 3: Marcación Demo Instantánea de 1-Clic */}
+        {activeTab === 'demo' && (
+          <div className="bg-slate-950 p-4 rounded-2xl border border-slate-800 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-extrabold text-amber-400 flex items-center gap-1.5 uppercase">
+                <Zap className="w-4 h-4 text-amber-400 animate-bounce" />
+                <span>Simular Marcación Instantánea (Prueba 1-Clic):</span>
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-400">
+              Haga clic en cualquiera de los siguientes trabajadores para registrar su asistencia de inmediato y probar el flujo sin cámara:
+            </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-48 overflow-y-auto pr-1">
+              {workers.slice(0, 6).map((w) => (
+                <button
+                  key={w.id}
+                  type="button"
+                  onClick={() => handleProcessScan(w.dni)}
+                  className="flex items-center gap-2.5 p-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-emerald-500/50 rounded-xl transition text-left group"
+                >
+                  <img src={w.photoUrl} alt={w.fullName} className="w-9 h-9 rounded-full object-cover border border-slate-700 shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <div className="text-xs font-bold text-slate-200 truncate group-hover:text-emerald-300">{w.fullName}</div>
+                    <div className="text-[10px] text-slate-400 font-mono">DNI: {w.dni}</div>
+                  </div>
+                  <span className="text-[10px] font-black text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded border border-emerald-500/30">
+                    Marcar
+                  </span>
+                </button>
+              ))}
+            </div>
           </div>
         )}
 
