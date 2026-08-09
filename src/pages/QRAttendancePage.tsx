@@ -254,22 +254,31 @@ export const QRAttendancePage: React.FC<QRAttendancePageProps> = ({
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/60">
-              {filteredRecords.map((rec) => (
-                <tr key={rec.id} className="hover:bg-slate-900/60 transition-colors">
-                  <td className="p-3 font-mono text-slate-400">{rec.timestamp}</td>
-                  <td className="p-3 font-bold text-amber-400">{rec.workerDni}</td>
-                  <td className="p-3 font-semibold text-slate-100">{rec.workerName}</td>
-                  <td className="p-3 text-slate-400">{rec.company}</td>
-                  <td className="p-3 text-slate-300">{rec.camp}</td>
-                  <td className="p-3 font-bold text-amber-300">{rec.serviceType}</td>
-                  <td className="p-3 text-slate-400">{rec.scannedBy}</td>
-                  <td className="p-3">
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-extrabold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                      <CheckCircle2 className="w-3 h-3" /> {rec.status}
-                    </span>
+              {filteredRecords.length > 0 ? (
+                filteredRecords.map((rec) => (
+                  <tr key={rec.id} className="hover:bg-slate-900/60 transition-colors">
+                    <td className="p-3 font-mono text-slate-400">{rec.timestamp}</td>
+                    <td className="p-3 font-bold text-amber-400">{rec.workerDni}</td>
+                    <td className="p-3 font-semibold text-slate-100">{rec.workerName}</td>
+                    <td className="p-3 text-slate-400">{rec.company}</td>
+                    <td className="p-3 text-slate-300">{rec.camp}</td>
+                    <td className="p-3 font-bold text-amber-300">{rec.serviceType}</td>
+                    <td className="p-3 text-slate-400">{rec.scannedBy}</td>
+                    <td className="p-3">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-extrabold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                        <CheckCircle2 className="w-3 h-3" /> {rec.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={8} className="p-8 text-center text-slate-400 space-y-2">
+                    <p className="text-xs font-semibold">No hay marcaciones de asistencia registradas aún para este filtro.</p>
+                    <p className="text-[11px] text-slate-500">Ingrese un DNI arriba o use el escáner para registrar la primera asistencia.</p>
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>

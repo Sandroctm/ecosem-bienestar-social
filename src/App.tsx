@@ -57,6 +57,7 @@ import {
   MOCK_ENTERPRISE_CAMPAMENTOS,
   MOCK_ENTERPRISE_ENTREGAS,
   MOCK_ENTERPRISE_SOLICITUDES,
+  MOCK_ENTERPRISE_ATTENDANCE,
 } from './utils/mockEnterprise12Tables';
 
 import {
@@ -146,7 +147,7 @@ export function App() {
 
   // Application Data States (Clean / Empty by default, persisted in localStorage)
   const [workers, setWorkers] = useState<Worker[]>(() => loadFromStorage('ecosem_workers', MOCK_ENTERPRISE_WORKERS));
-  const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>(() => loadFromStorage('ecosem_attendance', INITIAL_ATTENDANCE));
+  const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>(() => loadFromStorage('ecosem_attendance', MOCK_ENTERPRISE_ATTENDANCE));
   const [valuations, setValuations] = useState<ValuationItem[]>(() => loadFromStorage('ecosem_valuations', INITIAL_VALUATIONS));
   const [roomHandovers, setRoomHandovers] = useState<RoomHandover[]>(() => loadFromStorage('ecosem_room_handovers', INITIAL_ROOM_HANDOVERS));
   const [rooms, setRooms] = useState<Room[]>(() => loadFromStorage('ecosem_rooms', INITIAL_ROOMS));
@@ -188,6 +189,7 @@ export function App() {
   // Recargar todos los estados desde localStorage tras importar un respaldo o sincronizar desde la nube
   const handleReloadAllState = () => {
     setWorkers(loadFromStorage('ecosem_workers', MOCK_ENTERPRISE_WORKERS));
+    setAttendanceRecords(loadFromStorage('ecosem_attendance', MOCK_ENTERPRISE_ATTENDANCE));
     setDescansos(loadFromStorage('ecosem_descansos', MOCK_ENTERPRISE_DESCANSOS));
     setPrestamos(loadFromStorage('ecosem_prestamos', MOCK_ENTERPRISE_PRESTAMOS));
     setSctrs(loadFromStorage('ecosem_sctrs', MOCK_ENTERPRISE_SCTR));
