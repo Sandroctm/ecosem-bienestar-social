@@ -773,6 +773,7 @@ export function App() {
               workers={workers}
               onOpenScanner={() => setIsQRScannerOpen(true)}
               onExportExcel={handleExportCurrentModuleToExcel}
+              onAddAttendance={handleScanSuccess}
             />
           )}
 
@@ -889,6 +890,7 @@ export function App() {
       {/* MODALS */}
       <QRScannerModal
         workers={workers}
+        attendanceRecords={attendanceRecords}
         isOpen={isQRScannerOpen}
         onClose={() => setIsQRScannerOpen(false)}
         onScanSuccess={handleScanSuccess}

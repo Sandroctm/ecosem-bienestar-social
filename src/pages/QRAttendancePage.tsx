@@ -11,16 +11,27 @@ import {
   BedDouble,
   UserCheck,
   Plus,
+  ShieldCheck,
+  ShieldAlert,
+  Clock,
+  Radio,
 } from 'lucide-react';
 import { AttendanceRecord, Worker } from '../types';
 import { QRBadgeGenerator } from '../components/QRBadgeGenerator';
 import { exportToExcel } from '../utils/excelExport';
+import { validateAttendanceCheckin, AttendanceValidationResult } from '../utils/attendanceValidationEngine';
+import { AttendanceValidationModal } from '../components/AttendanceValidationModal';
 
 interface QRAttendancePageProps {
   attendanceRecords: AttendanceRecord[];
   workers: Worker[];
   onOpenScanner: () => void;
   onExportExcel: () => void;
+  onAddAttendance?: (
+    workerDni: string,
+    serviceType: 'Almuerzo' | 'Cena' | 'Alojamiento' | 'Ingreso Campamento' | 'Desayuno',
+    roomNumber?: string
+  ) => void;
 }
 
 export const QRAttendancePage: React.FC<QRAttendancePageProps> = ({
@@ -28,10 +39,34 @@ export const QRAttendancePage: React.FC<QRAttendancePageProps> = ({
   workers,
   onOpenScanner,
   onExportExcel,
+  onAddAttendance,
 }) => {
   const [selectedWorkerForBadge, setSelectedWorkerForBadge] = useState<Worker | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [serviceFilter, setServiceFilter] = useState<string>('Todos');
+  const [quickDniInput, setQuickDniInput] = useState('');
+  const [quickServiceType, setQuickServiceType] = useState<'Almuerzo' | 'Cena' | 'Alojamiento' | 'Ingreso Campamento' | 'Desayuno'>('Almuerzo');
+  const [pendingValidation, setPendingValidation] = useState<AttendanceValidationResult | null>(null);
+  const [isValidationModalOpen, setIsValidationModalOpen] = useState(false);
+
+  const handleQuickSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!quickDniInput.trim()) return;
+
+    const valResult = validateAttendanceCheckin(quickDniInput, quickServiceType, workers, attendanceRecords);
+    setPendingValidation(valResult);
+    setIsValidationModalOpen(true);
+  };
+
+  const handleConfirmCheckin = (override?: boolean) => {
+    if (pendingValidation && onAddAttendance) {
+      const targetDni = pendingValidation.worker ? pendingValidation.worker.dni : quickDniInput.trim();
+      onAddAttendance(targetDni, quickServiceType, pendingValidation.worker?.roomNumber);
+    }
+    setIsValidationModalOpen(false);
+    setQuickDniInput('');
+    setPendingValidation(null);
+  };
 
   const filteredRecords = attendanceRecords.filter((rec) => {
     const matchesSearch =
@@ -76,6 +111,46 @@ export const QRAttendancePage: React.FC<QRAttendancePageProps> = ({
             Exportar Asistencia (.xlsx)
           </button>
         </div>
+      </div>
+
+      {/* Barra de Marcación Rápida Manual por DNI en Garita / Comedor */}
+      <div className="glass-panel p-4 rounded-2xl border border-slate-800 bg-slate-900/90">
+        <form onSubmit={handleQuickSubmit} className="flex flex-col sm:flex-row items-center gap-3">
+          <div className="flex items-center gap-2 text-xs font-extrabold text-amber-400 shrink-0">
+            <Radio className="w-4 h-4 text-emerald-400 animate-pulse" />
+            <span>Marcación Rápida Garita:</span>
+          </div>
+
+          <div className="relative flex-1 w-full">
+            <input
+              type="text"
+              placeholder="Ingrese DNI o escanee con lector físico USB (8 dígitos)..."
+              value={quickDniInput}
+              onChange={(e) => setQuickDniInput(e.target.value)}
+              className="w-full pl-3 pr-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-xs font-mono font-bold text-amber-300 focus:outline-none focus:border-amber-500"
+            />
+          </div>
+
+          <select
+            value={quickServiceType}
+            onChange={(e) => setQuickServiceType(e.target.value as any)}
+            className="w-full sm:w-auto py-2 px-3 bg-slate-950 border border-slate-700 rounded-xl text-xs font-bold text-slate-200"
+          >
+            <option value="Almuerzo">🍱 Almuerzo</option>
+            <option value="Desayuno">🍳 Desayuno</option>
+            <option value="Cena">🍲 Cena</option>
+            <option value="Ingreso Campamento">🏕️ Ingreso Garita</option>
+            <option value="Alojamiento">🛌 Alojamiento</option>
+          </select>
+
+          <button
+            type="submit"
+            className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black rounded-xl shadow-lg transition"
+          >
+            <Plus className="w-4 h-4" />
+            Validar & Registrar
+          </button>
+        </form>
       </div>
 
       {/* Stats raciones bar */}
@@ -212,6 +287,17 @@ export const QRAttendancePage: React.FC<QRAttendancePageProps> = ({
         </div>
       )}
 
+      {/* Modal de Validación Biométrica */}
+      <AttendanceValidationModal
+        isOpen={isValidationModalOpen}
+        validation={pendingValidation}
+        serviceType={quickServiceType}
+        onConfirm={handleConfirmCheckin}
+        onCancel={() => {
+          setIsValidationModalOpen(false);
+          setPendingValidation(null);
+        }}
+      />
     </div>
   );
 };

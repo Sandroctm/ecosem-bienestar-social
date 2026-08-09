@@ -1,13 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Html5QrcodeScanner } from 'html5-qrcode';
 import { QRCodeSVG } from 'qrcode.react';
-import { X, CheckCircle2, QrCode, Smartphone, Sparkles, UserCheck, Camera, Layers, ShieldAlert } from 'lucide-react';
-import { Worker } from '../types';
+import { X, CheckCircle2, QrCode, Smartphone, Sparkles, UserCheck, Camera, Layers, ShieldAlert, Utensils, BedDouble, LogIn, Coffee } from 'lucide-react';
+import { Worker, AttendanceRecord } from '../types';
 import { getQrBaseUrl } from '../App';
 import { sanitizeAndValidateQRPayload } from '../utils/qrPayloadSanitizer';
 
 interface QRScannerModalProps {
   workers: Worker[];
+  attendanceRecords?: AttendanceRecord[];
   isOpen: boolean;
   onClose: () => void;
   onScanSuccess: (
@@ -228,11 +229,35 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({
           </button>
         </div>
 
-        {/* Service Type Indicator */}
-        <div className="bg-amber-500/10 border border-amber-500/30 p-2.5 rounded-xl text-center">
-          <span className="text-xs font-black text-amber-400 uppercase tracking-wider flex items-center justify-center gap-2">
-            🚪 Marcación Activa: Ingreso a Campamento
+        {/* Selector Interactivo de Servicio */}
+        <div className="bg-slate-950 p-2.5 rounded-xl border border-slate-800 space-y-1.5">
+          <span className="text-[10px] uppercase font-mono font-bold text-amber-400 block text-center">
+            Seleccionar Servicio para Marcación:
           </span>
+          <div className="grid grid-cols-3 sm:grid-cols-5 gap-1.5 text-[11px] font-extrabold">
+            {(
+              [
+                { id: 'Desayuno', label: '🍳 Desayuno' },
+                { id: 'Almuerzo', label: '🍱 Almuerzo' },
+                { id: 'Cena', label: '🍲 Cena' },
+                { id: 'Ingreso Campamento', label: '🏕️ Garita' },
+                { id: 'Alojamiento', label: '🛌 Cuarto' },
+              ] as const
+            ).map((srv) => (
+              <button
+                key={srv.id}
+                type="button"
+                onClick={() => setSelectedService(srv.id)}
+                className={`py-1.5 px-1 rounded-lg border text-[10px] font-bold text-center transition-all ${
+                  selectedService === srv.id
+                    ? 'bg-amber-500 text-slate-950 border-amber-400 font-black shadow-md'
+                    : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-slate-200'
+                }`}
+              >
+                {srv.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Feedback message banner */}
