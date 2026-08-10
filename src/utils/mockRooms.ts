@@ -1,17 +1,20 @@
 import { Room, Pabellon } from '../types';
 
 export const INITIAL_PABELLONES: Pabellon[] = [
-  { id: 'PAB-A', name: 'Pabellón A', description: 'Módulo Principal - Personal de Operaciones', floorsCount: 2 },
-  { id: 'PAB-B', name: 'Pabellón B', description: 'Módulo Técnico y Supervisión', floorsCount: 2 },
-  { id: 'PAB-DIANA', name: 'Campamento Diana', description: 'Residencia de Residencia Especializada', floorsCount: 1 },
+  { id: 'PAB-A', name: 'Pabellón A', camp: 'Sede Morococha - Unidad Toromocho', description: 'Módulo Principal - Personal de Operaciones', floorsCount: 2 },
+  { id: 'PAB-B', name: 'Pabellón B', camp: 'Sede Morococha - Unidad Toromocho', description: 'Módulo Técnico y Supervisión', floorsCount: 2 },
+  { id: 'PAB-SOL', name: 'Pabellón Soledad 01', camp: 'Campamento Soledad', description: 'Módulo de Residencia Soledad', floorsCount: 2 },
+  { id: 'PAB-DIANA', name: 'Módulo Diana A', camp: 'Campamento Diana - Módulo A', description: 'Residencia Especializada Diana A', floorsCount: 1 },
+  { id: 'PAB-CENTRAL', name: 'Pabellón Central A', camp: 'Campamento Central', description: 'Módulo Central de Campamento Base', floorsCount: 2 },
 ];
 
 export const INITIAL_ROOMS: Room[] = [
-  // Pabellón A
+  // Pabellón A (Sede Morococha)
   {
     id: 'R-101',
     roomNumber: '101',
     pabellon: 'Pabellón A',
+    camp: 'Sede Morococha - Unidad Toromocho',
     floor: 1,
     capacity: 2,
     status: 'Ocupado',
@@ -19,12 +22,13 @@ export const INITIAL_ROOMS: Room[] = [
     currentOccupantName: 'JUAN PÉREZ RAMÍREZ',
     occupantCompany: 'Consorcio Minero Arequipa',
     checkInDate: '2026-07-01',
-    lastLinenChangeDate: '2026-07-12', // > 14 días => ALERTA ROJA!
+    lastLinenChangeDate: '2026-07-12',
   },
   {
     id: 'R-102',
     roomNumber: '102',
     pabellon: 'Pabellón A',
+    camp: 'Sede Morococha - Unidad Toromocho',
     floor: 1,
     capacity: 2,
     status: 'Ocupado',
@@ -32,12 +36,13 @@ export const INITIAL_ROOMS: Room[] = [
     currentOccupantName: 'MARÍA FLORES QUISPE',
     occupantCompany: 'Servicios Logísticos del Sur',
     checkInDate: '2026-07-15',
-    lastLinenChangeDate: '2026-07-28', // Al día (2 días)
+    lastLinenChangeDate: '2026-07-28',
   },
   {
     id: 'R-103',
     roomNumber: '103',
     pabellon: 'Pabellón A',
+    camp: 'Sede Morococha - Unidad Toromocho',
     floor: 1,
     capacity: 2,
     status: 'Libre',
@@ -47,39 +52,43 @@ export const INITIAL_ROOMS: Room[] = [
     id: 'R-201',
     roomNumber: '201',
     pabellon: 'Pabellón A',
+    camp: 'Sede Morococha - Unidad Toromocho',
     floor: 2,
     capacity: 2,
     status: 'Limpieza',
-    lastLinenChangeDate: '2026-07-10', // ALERTA ROJA!
+    lastLinenChangeDate: '2026-07-10',
   },
   {
     id: 'R-202',
     roomNumber: '202',
     pabellon: 'Pabellón A',
+    camp: 'Sede Morococha - Unidad Toromocho',
     floor: 2,
     capacity: 2,
     status: 'Reservado',
     lastLinenChangeDate: '2026-07-25',
   },
 
-  // Pabellón B
+  // Pabellón B (Sede Morococha)
   {
     id: 'R-203',
     roomNumber: '203',
     pabellon: 'Pabellón B',
+    camp: 'Sede Morococha - Unidad Toromocho',
     floor: 1,
     capacity: 2,
     status: 'Ocupado',
     currentOccupantDni: '10982377',
     currentOccupantName: 'CARLOS MAMANI CHOQUE',
     occupantCompany: 'Techint Minería',
-    checkInDate: '2026-06-25', // > 30 días!
-    lastLinenChangeDate: '2026-07-14', // 16 días => ALERTA ROJA!
+    checkInDate: '2026-06-25',
+    lastLinenChangeDate: '2026-07-14',
   },
   {
     id: 'R-204',
     roomNumber: 'A-204',
     pabellon: 'Pabellón B',
+    camp: 'Sede Morococha - Unidad Toromocho',
     floor: 1,
     capacity: 2,
     status: 'Ocupado',
@@ -93,28 +102,49 @@ export const INITIAL_ROOMS: Room[] = [
     id: 'R-205',
     roomNumber: '205',
     pabellon: 'Pabellón B',
+    camp: 'Sede Morococha - Unidad Toromocho',
     floor: 2,
     capacity: 2,
     status: 'Mantenimiento',
     lastLinenChangeDate: '2026-07-05',
   },
+
+  // Campamento Soledad
+  {
+    id: 'R-SOL-202',
+    roomNumber: 'HAB. 202',
+    pabellon: 'Pabellón Soledad 01',
+    camp: 'Campamento Soledad',
+    floor: 2,
+    capacity: 1,
+    status: 'Ocupado',
+    currentOccupantDni: '72544740',
+    currentOccupantName: 'ROSSYSELA TOVAR ARTICA',
+    occupantCompany: 'ECOSEM PUCARA',
+    checkInDate: '2026-08-01',
+    lastLinenChangeDate: '2026-08-05',
+  },
+
+  // Campamento Diana
   {
     id: 'R-502',
     roomNumber: 'HAB. 502',
-    pabellon: 'Campamento Diana',
+    pabellon: 'Módulo Diana A',
+    camp: 'Campamento Diana - Módulo A',
     floor: 1,
     capacity: 1,
     status: 'Ocupado',
     currentOccupantDni: '30567891',
     currentOccupantName: 'PEDRO CONDORI TICONA',
     occupantCompany: 'Minera Las Bambas S.A.',
-    checkInDate: '2026-07-02',
-    lastLinenChangeDate: '2026-07-20',
+    checkInDate: '2026-07-20',
+    lastLinenChangeDate: '2026-07-28',
   },
   {
     id: 'R-503',
     roomNumber: 'HAB. 503',
-    pabellon: 'Campamento Diana',
+    pabellon: 'Módulo Diana A',
+    camp: 'Campamento Diana - Módulo A',
     floor: 1,
     capacity: 1,
     status: 'Libre',

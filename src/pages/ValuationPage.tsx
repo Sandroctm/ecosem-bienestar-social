@@ -767,9 +767,35 @@ export const ValuationPage: React.FC<ValuationPageProps> = ({ workers }) => {
                   </select>
                 </div>
 
+                <div className="sm:col-span-2 lg:col-span-3 bg-amber-500/10 p-3.5 rounded-2xl border-2 border-amber-500/50">
+                  <label className="block text-amber-300 font-black text-xs uppercase mb-1.5 flex items-center justify-between">
+                    <span className="flex items-center gap-1.5">
+                      <Building2 className="w-4 h-4 text-amber-400" /> 🏕️ Campamento Minero (Eje Principal de Valorización)
+                    </span>
+                    <input
+                      type="text"
+                      placeholder="🔍 Buscar campamento..."
+                      value={campSearchQuery}
+                      onChange={(e) => setCampSearchQuery(e.target.value)}
+                      className="p-1 px-2 bg-slate-950 border border-amber-500/40 rounded-lg text-[11px] font-normal text-slate-200"
+                    />
+                  </label>
+                  <select
+                    value={formCampId}
+                    onChange={(e) => setFormCampId(e.target.value)}
+                    className="w-full p-3 bg-slate-950 border border-amber-500/50 rounded-xl text-amber-300 font-black text-sm shadow-md"
+                  >
+                    {filteredCamps.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        🏕️ {c.name} — Capacidad: {c.capacity} camas ({c.location})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
                 <div>
                   <label className="block text-slate-300 font-bold mb-1.5 flex items-center gap-1.5">
-                    <Briefcase className="w-4 h-4 text-amber-400" /> Cliente / Contrata Minera
+                    <Briefcase className="w-4 h-4 text-amber-400" /> 🏢 Empresa / Contrata Minera Asociada
                   </label>
                   <select
                     value={formClientId}
@@ -778,30 +804,6 @@ export const ValuationPage: React.FC<ValuationPageProps> = ({ workers }) => {
                   >
                     {CLIENTS_LIST.map((cli) => (
                       <option key={cli.id} value={cli.id}>{cli.name}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="sm:col-span-2 lg:col-span-3">
-                  <label className="block text-slate-300 font-bold mb-1.5 flex items-center justify-between">
-                    <span className="flex items-center gap-1.5"><Building2 className="w-4 h-4 text-amber-400" /> Campamento Minero (11 Disponibles)</span>
-                    <input
-                      type="text"
-                      placeholder="🔍 Buscar campamento..."
-                      value={campSearchQuery}
-                      onChange={(e) => setCampSearchQuery(e.target.value)}
-                      className="p-1 px-2.5 bg-slate-900 border border-slate-700 rounded-lg text-[11px] font-normal"
-                    />
-                  </label>
-                  <select
-                    value={formCampId}
-                    onChange={(e) => setFormCampId(e.target.value)}
-                    className="w-full p-3 bg-slate-950 border border-slate-800 rounded-xl text-amber-300 font-bold text-sm"
-                  >
-                    {filteredCamps.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.name} — Capacidad: {c.capacity} camas ({c.location})
-                      </option>
                     ))}
                   </select>
                 </div>

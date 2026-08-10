@@ -312,6 +312,7 @@ export interface Room {
   id: string;
   roomNumber: string; // ej: "101", "HAB. 502"
   pabellon: string;   // ej: "Pabellón A", "Pabellón B", "Pabellón Diana"
+  camp?: string;      // ej: "Sede Morococha - Unidad Toromocho", "Campamento Soledad"
   floor: number;      // 1, 2, 3
   capacity: number;   // cantidad de camas
   status: RoomStatus;
@@ -326,6 +327,7 @@ export interface Room {
 export interface Pabellon {
   id: string;
   name: string; // "Pabellón A", "Pabellón B", etc.
+  camp?: string; // Campamento al que pertenece el pabellón
   description: string;
   floorsCount: number;
 }

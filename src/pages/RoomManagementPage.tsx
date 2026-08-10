@@ -43,6 +43,20 @@ interface RoomManagementPageProps {
   onOpenAICopilot: () => void;
 }
 
+const REGISTERED_CAMPS_LIST = [
+  'Sede Morococha - Unidad Toromocho',
+  'Campamento Soledad',
+  'Campamento Diana - Módulo A',
+  'Campamento Diana - Módulo B',
+  'Campamento Central',
+  'Campamento Carhuacoto',
+  'Campamento Tuctu',
+  'Hotel Centro',
+  'Posada del Minero',
+  'San Cristóbal',
+  'Andaychagua',
+];
+
 export const RoomManagementPage: React.FC<RoomManagementPageProps> = ({
   rooms,
   pabellones,
@@ -54,6 +68,7 @@ export const RoomManagementPage: React.FC<RoomManagementPageProps> = ({
   onOpenAICopilot,
 }) => {
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
+  const [selectedCampFilter, setSelectedCampFilter] = useState<string>('Todos');
   const [selectedPabellonFilter, setSelectedPabellonFilter] = useState<string>('Todos');
   const [statusFilter, setStatusFilter] = useState<string>('Todos');
   const [searchTerm, setSearchTerm] = useState<string>('');
@@ -64,6 +79,7 @@ export const RoomManagementPage: React.FC<RoomManagementPageProps> = ({
 
   // New/Edit Room Form state
   const [roomNumberInput, setRoomNumberInput] = useState('');
+  const [campInput, setCampInput] = useState<string>('Sede Morococha - Unidad Toromocho');
   const [pabellonInput, setPabellonInput] = useState(pabellones[0]?.name || 'Pabellón A');
   const [floorInput, setFloorInput] = useState<number>(1);
   const [capacityInput, setCapacityInput] = useState<number>(2);
@@ -74,6 +90,7 @@ export const RoomManagementPage: React.FC<RoomManagementPageProps> = ({
   // New Pabellón modal state
   const [isNewPabellonModalOpen, setIsNewPabellonModalOpen] = useState(false);
   const [newPabellonName, setNewPabellonName] = useState('');
+  const [newPabellonCamp, setNewPabellonCamp] = useState<string>('Sede Morococha - Unidad Toromocho');
   const [newPabellonDesc, setNewPabellonDesc] = useState('');
 
   // Auto calculations for statistics & KPIs
@@ -102,22 +119,28 @@ export const RoomManagementPage: React.FC<RoomManagementPageProps> = ({
 
   // Filtered rooms for grid & table
   const filteredRooms = rooms.filter((r) => {
+    const matchesCamp =
+      selectedCampFilter === 'Todos' ||
+      (r.camp && r.camp.toLowerCase().includes(selectedCampFilter.toLowerCase())) ||
+      (selectedCampFilter.includes('Morococha') && (!r.camp || r.camp.includes('Morococha')));
     const matchesPabellon = selectedPabellonFilter === 'Todos' || r.pabellon === selectedPabellonFilter;
     const matchesStatus = statusFilter === 'Todos' || r.status === statusFilter;
     const matchesSearch =
       r.roomNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
       r.pabellon.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (r.camp && r.camp.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (r.currentOccupantName && r.currentOccupantName.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (r.occupantCompany && r.occupantCompany.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (r.currentOccupantDni && r.currentOccupantDni.includes(searchTerm));
 
-    return matchesPabellon && matchesStatus && matchesSearch;
+    return matchesCamp && matchesPabellon && matchesStatus && matchesSearch;
   });
 
   // Open modal for CREATING room
   const handleOpenCreateModal = () => {
     setEditingRoom(null);
     setRoomNumberInput('');
+    setCampInput(selectedCampFilter !== 'Todos' ? selectedCampFilter : REGISTERED_CAMPS_LIST[0]);
     setPabellonInput(pabellones[0]?.name || 'Pabellón A');
     setFloorInput(1);
     setCapacityInput(2);
@@ -131,6 +154,7 @@ export const RoomManagementPage: React.FC<RoomManagementPageProps> = ({
   const handleStartEdit = (room: Room) => {
     setEditingRoom(room);
     setRoomNumberInput(room.roomNumber);
+    setCampInput(room.camp || REGISTERED_CAMPS_LIST[0]);
     setPabellonInput(room.pabellon);
     setFloorInput(room.floor);
     setCapacityInput(room.capacity);
@@ -189,6 +213,7 @@ export const RoomManagementPage: React.FC<RoomManagementPageProps> = ({
         ...editingRoom,
         roomNumber: roomNumberInput.trim(),
         pabellon: pabellonInput,
+        camp: campInput,
         floor: floorInput,
         capacity: capacityInput,
         status: statusInput,
@@ -202,6 +227,7 @@ export const RoomManagementPage: React.FC<RoomManagementPageProps> = ({
         id: `R-${Date.now().toString().slice(-5)}`,
         roomNumber: roomNumberInput.trim(),
         pabellon: pabellonInput,
+        camp: campInput,
         floor: floorInput,
         capacity: capacityInput,
         status: statusInput,
@@ -431,6 +457,17 @@ export const RoomManagementPage: React.FC<RoomManagementPageProps> = ({
                 <Table className="w-4 h-4" /> Tabla Detallada
               </button>
             </div>
+
+            <select
+              value={selectedCampFilter}
+              onChange={(e) => setSelectedCampFilter(e.target.value)}
+              className="py-2.5 px-3 bg-slate-950 border border-amber-500/40 rounded-2xl text-amber-300 font-extrabold text-xs shadow"
+            >
+              <option value="Todos">🌐 Todos los Campamentos ({rooms.length} cuartos)</option>
+              {REGISTERED_CAMPS_LIST.map((c) => (
+                <option key={c} value={c}>🏕️ {c}</option>
+              ))}
+            </select>
 
             <select
               value={selectedPabellonFilter}
@@ -677,6 +714,19 @@ export const RoomManagementPage: React.FC<RoomManagementPageProps> = ({
 
             <form onSubmit={handleSaveForm} className="space-y-4 text-xs">
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-slate-300 font-bold mb-1">Campamento Minero *:</label>
+                  <select
+                    value={campInput}
+                    onChange={(e) => setCampInput(e.target.value)}
+                    className="w-full p-3 bg-slate-950 border border-amber-500/40 rounded-xl text-amber-300 font-bold text-sm"
+                  >
+                    {REGISTERED_CAMPS_LIST.map((c) => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                </div>
+
                 <div>
                   <label className="block text-slate-300 font-bold mb-1">N° de Habitación / Cuarto *:</label>
                   <input
