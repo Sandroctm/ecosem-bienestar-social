@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import {
   Calculator,
   Plus,
@@ -160,10 +160,53 @@ export const ValuationPage: React.FC<ValuationPageProps> = ({ workers, attendanc
     localStorage.setItem('ecosem_valuation_records', JSON.stringify(newRecords));
   };
 
+  // Dynamically compute unique camps registered across personnel and QR attendance records
+  const dynamicCamps = useMemo(() => {
+    const campMap = new Map<string, { id: string; name: string; capacity: number; location: string }>();
+
+    // Predefined lookup for capacities and locations
+    CAMPS_LIST.forEach((c) => {
+      campMap.set(c.name.toLowerCase().trim(), c);
+    });
+
+    const activeCampNamesSet = new Set<string>();
+    workers.forEach((w) => {
+      if (w.camp && w.camp.trim()) {
+        activeCampNamesSet.add(w.camp.trim());
+      }
+    });
+
+    attendanceRecords.forEach((att) => {
+      if (att.camp && att.camp.trim()) {
+        activeCampNamesSet.add(att.camp.trim());
+      }
+    });
+
+    const activeCampNames = Array.from(activeCampNamesSet);
+
+    if (activeCampNames.length === 0) {
+      return CAMPS_LIST;
+    }
+
+    return activeCampNames.map((campName, idx) => {
+      const key = campName.toLowerCase().trim();
+      const existingPredefined = campMap.get(key);
+      if (existingPredefined) {
+        return existingPredefined;
+      }
+      return {
+        id: `c-dyn-${idx}-${campName.replace(/\s+/g, '-').toLowerCase()}`,
+        name: campName,
+        capacity: 120,
+        location: 'Sede Operativa'
+      };
+    });
+  }, [workers, attendanceRecords]);
+
   // Form State for "Nueva Valorización"
   const [formYear, setFormYear] = useState<number>(2026);
   const [formMonth, setFormMonth] = useState<string>('Mayo');
-  const [formCampId, setFormCampId] = useState<string>('c1');
+  const [formCampId, setFormCampId] = useState<string>(() => dynamicCamps[0]?.id || 'c1');
   const [formClientId, setFormClientId] = useState<string>('cli1');
   const [formDailyRate, setFormDailyRate] = useState<number>(10.0);
   const [formCreationMode, setFormCreationMode] = useState<'En Blanco' | 'Clonar Mes Anterior'>('En Blanco');
@@ -332,7 +375,7 @@ export const ValuationPage: React.FC<ValuationPageProps> = ({ workers, attendanc
   const handleCreateValuationSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    const selectedCamp = CAMPS_LIST.find((c) => c.id === formCampId);
+    const selectedCamp = dynamicCamps.find((c) => c.id === formCampId) || dynamicCamps[0];
     const selectedClient = CLIENTS_LIST.find((cli) => cli.id === formClientId);
 
     if (!selectedCamp || !selectedClient) return;
@@ -705,8 +748,8 @@ export const ValuationPage: React.FC<ValuationPageProps> = ({ workers, attendanc
     return true;
   }) : [];
 
-  // Filtered camps for creation form search
-  const filteredCamps = CAMPS_LIST.filter(c => c.name.toLowerCase().includes(campSearchQuery.toLowerCase()));
+  // Filtered camps for creation form search (ONLY camps registered by personnel)
+  const filteredCamps = dynamicCamps.filter(c => c.name.toLowerCase().includes(campSearchQuery.toLowerCase()));
 
   // Consolidated calculation
   const consolidatedRecords = records.filter(
