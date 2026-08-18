@@ -252,16 +252,49 @@ export const WorkersManagementPage: React.FC<WorkersManagementPageProps> = ({
             {/* MANUAL CAMP ENTRY REQUIREMENT */}
             <div>
               <label className="block text-slate-400 font-semibold mb-1">
-                Nombre del Campamento Minero *:
+                Campamento Minero *:
               </label>
-              <input
-                type="text"
-                value={camp}
-                onChange={(e) => setCamp(e.target.value)}
-                placeholder="Ej: Campamento Norte / Central"
+              <select
+                value={[
+                  'Hotel Centro', 'Diana', 'Posada del Minero', 'Campamento 4', 'San Cristóbal',
+                  'Andaychagua', 'Carahuacra', 'Ticuaco', 'Pucará Central', 'Morococha Central', 'Pabellón VIP'
+                ].includes(camp) ? camp : (camp === '' ? '' : 'Otro')}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val === 'Otro') {
+                    setCamp('Nuevo Campamento');
+                  } else {
+                    setCamp(val);
+                  }
+                }}
                 className="w-full p-2.5 bg-slate-950 border border-amber-500/40 rounded-lg text-slate-100 focus:outline-none focus:border-amber-400 font-bold"
                 required
-              />
+              >
+                <option value="">-- Seleccionar --</option>
+                <option value="Hotel Centro">Hotel Centro</option>
+                <option value="Diana">Diana</option>
+                <option value="Posada del Minero">Posada del Minero</option>
+                <option value="Campamento 4">Campamento 4</option>
+                <option value="San Cristóbal">San Cristóbal</option>
+                <option value="Andaychagua">Andaychagua</option>
+                <option value="Carahuacra">Carahuacra</option>
+                <option value="Ticuaco">Ticuaco</option>
+                <option value="Pucará Central">Pucará Central</option>
+                <option value="Morococha Central">Morococha Central</option>
+                <option value="Pabellón VIP">Pabellón VIP</option>
+                <option value="Otro">Otro (Ingreso manual)...</option>
+              </select>
+              
+              {!['Hotel Centro', 'Diana', 'Posada del Minero', 'Campamento 4', 'San Cristóbal', 'Andaychagua', 'Carahuacra', 'Ticuaco', 'Pucará Central', 'Morococha Central', 'Pabellón VIP'].includes(camp) && camp !== '' && (
+                <input
+                  type="text"
+                  value={camp === 'Nuevo Campamento' ? '' : camp}
+                  onChange={(e) => setCamp(e.target.value)}
+                  placeholder="Ej: Campamento Norte / Central"
+                  className="w-full mt-2 p-2 bg-slate-950 border border-slate-700 rounded-lg text-slate-100 focus:outline-none focus:border-amber-400 font-bold"
+                  required
+                />
+              )}
             </div>
 
             <div>

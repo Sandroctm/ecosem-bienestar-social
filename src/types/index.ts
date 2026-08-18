@@ -142,6 +142,8 @@ export interface ValuationMatrixRow {
   daysMarked: (number | AttendanceSymbol)[]; // Array of 31 days ('1' = Pernoctación 100%, 'D' = Diurno 50%, 'L' = Licencia 0%, 'F' = Falta 0%)
   dailyRate: number;
   foodConsumptionRate?: number; // Ej: 15.00
+  workerDni?: string;
+  workerSalary?: number;
 }
 
 export interface ValuationAuditLog {

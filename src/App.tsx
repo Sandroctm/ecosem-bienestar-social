@@ -774,7 +774,7 @@ export function App() {
           )}
 
           {activeModule === 'valuation' && (
-            <ValuationPage workers={workers} />
+            <ValuationPage workers={workers} attendanceRecords={attendanceRecords} />
           )}
 
           {activeModule === 'room-management' && (

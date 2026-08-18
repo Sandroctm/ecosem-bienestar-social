@@ -39,6 +39,7 @@ import {
 } from 'lucide-react';
 import {
   Worker,
+  AttendanceRecord,
   ValuationRecord,
   ValuationMatrixRow,
   MonthlyValuationMatrix,
@@ -50,6 +51,7 @@ import { exportValuationMatrixToExcel, exportToExcel } from '../utils/excelExpor
 
 interface ValuationPageProps {
   workers: Worker[];
+  attendanceRecords?: AttendanceRecord[];
 }
 
 // 11 Campamentos Mineros predefinidos
@@ -96,7 +98,7 @@ const INITIAL_DEMO_ROWS: ValuationMatrixRow[] = [];
 // Seed inicial de valorizaciones (Vacío por defecto para iniciar desde cero)
 const INITIAL_VALUATION_RECORDS: ValuationRecord[] = [];
 
-export const ValuationPage: React.FC<ValuationPageProps> = ({ workers }) => {
+export const ValuationPage: React.FC<ValuationPageProps> = ({ workers, attendanceRecords = [] }) => {
   // Database of Valuations (Blank starting state per user request)
   const [records, setRecords] = useState<ValuationRecord[]>(() => {
     const saved = localStorage.getItem('ecosem_valuation_records');
@@ -232,6 +234,100 @@ export const ValuationPage: React.FC<ValuationPageProps> = ({ workers }) => {
     }
   };
 
+  const MONTHS_MAP: { [key: string]: number } = {
+    'enero': 1, 'febrero': 2, 'marzo': 3, 'abril': 4, 'mayo': 5, 'junio': 6,
+    'julio': 7, 'agosto': 8, 'setiembre': 9, 'septiembre': 9, 'octubre': 10, 'noviembre': 11, 'diciembre': 12
+  };
+
+  const parseAttendanceDate = (timestamp: string): { year: number; month: number; day: number } | null => {
+    if (!timestamp) return null;
+    const clean = timestamp.trim();
+    
+    // Try ISO format
+    if (clean.includes('T') || clean.match(/^\d{4}-\d{2}-\d{2}/)) {
+      const d = new Date(clean);
+      if (!isNaN(d.getTime())) {
+        return { year: d.getFullYear(), month: d.getMonth() + 1, day: d.getDate() };
+      }
+    }
+
+    // Try split by '/' or '-'
+    const datePart = clean.split(',')[0].trim();
+    const separators = datePart.includes('/') ? '/' : (datePart.includes('-') ? '-' : ' ');
+    const parts = datePart.split(separators);
+    if (parts.length >= 3) {
+      if (parts[0].length === 4) {
+        const year = parseInt(parts[0], 10);
+        const month = parseInt(parts[1], 10);
+        const day = parseInt(parts[2], 10);
+        if (!isNaN(year) && !isNaN(month) && !isNaN(day)) {
+          return { year, month, day };
+        }
+      } else {
+        const day = parseInt(parts[0], 10);
+        const month = parseInt(parts[1], 10);
+        const year = parseInt(parts[2], 10);
+        if (!isNaN(year) && !isNaN(month) && !isNaN(day)) {
+          return { year, month, day };
+        }
+      }
+    }
+
+    const d2 = new Date(clean);
+    if (!isNaN(d2.getTime())) {
+      return { year: d2.getFullYear(), month: d2.getMonth() + 1, day: d2.getDate() };
+    }
+    return null;
+  };
+
+  const getDaysMarkedFromAttendance = (
+    workerDni: string,
+    workerName: string,
+    campName: string,
+    year: number,
+    month: string
+  ): (number | AttendanceSymbol)[] => {
+    const days = Array(31).fill('0') as (number | AttendanceSymbol)[];
+    const monthNum = MONTHS_MAP[month.toLowerCase()] || 5;
+
+    // Filter attendance records for this worker in this year/month
+    const workerAttendance = attendanceRecords.filter((att) => {
+      // Match worker
+      const matchWorker = (att.workerDni && att.workerDni === workerDni) ||
+        (att.workerName && att.workerName.toLowerCase() === workerName.toLowerCase());
+      if (!matchWorker) return false;
+
+      // Parse timestamp
+      const parsedDate = parseAttendanceDate(att.timestamp);
+      if (!parsedDate) return false;
+
+      return parsedDate.year === year && parsedDate.month === monthNum;
+    });
+
+    // Populate the 31 days
+    for (let day = 1; day <= 31; day++) {
+      const dayRecords = workerAttendance.filter((att) => {
+        const parsedDate = parseAttendanceDate(att.timestamp);
+        return parsedDate?.day === day;
+      });
+
+      if (dayRecords.length > 0) {
+        // If there's an Accommodation type record, it's a full stay ('1')
+        const hasAlojamiento = dayRecords.some(r => r.serviceType === 'Alojamiento');
+        if (hasAlojamiento) {
+          days[day - 1] = '1';
+        } else {
+          // If they have other scans (Desayuno, Almuerzo, Cena, etc.), mark as Diurno ('D')
+          days[day - 1] = 'D';
+        }
+      } else {
+        days[day - 1] = '0';
+      }
+    }
+
+    return days;
+  };
+
   // 1. CREAR VALORIZACIÓN Y PRECARGA INTELIGENTE
   const handleCreateValuationSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -270,7 +366,7 @@ export const ValuationPage: React.FC<ValuationPageProps> = ({ workers }) => {
         generatedRows = previousVal.matrixRows.map((r, i) => ({
           ...r,
           id: `ROW-CLONE-${Date.now()}-${i}`,
-          daysMarked: Array(31).fill('1'),
+          daysMarked: getDaysMarkedFromAttendance(r.workerDni || '', r.workerName, selectedCamp.name, formYear, formMonth),
           dailyRate: formDailyRate,
         }));
       }
@@ -281,6 +377,8 @@ export const ValuationPage: React.FC<ValuationPageProps> = ({ workers }) => {
       if (campWorkers.length > 0) {
         generatedRows = campWorkers.map((w, idx) => ({
           id: `ROW-${Date.now()}-${idx}`,
+          workerDni: w.dni,
+          workerSalary: w.monthlyAverageSalary || 1650, // default placeholder
           roomNumber: w.roomNumber || `HAB. ${100 + idx}`,
           roomType: 'Simple',
           workerName: w.fullName.toUpperCase(),
@@ -289,7 +387,7 @@ export const ValuationPage: React.FC<ValuationPageProps> = ({ workers }) => {
           costCenter: `EPM00${(idx % 6) + 1}`,
           subcontractor: w.company,
           shift: idx % 2 === 0 ? 'Día' : 'Noche',
-          daysMarked: Array(31).fill('1'),
+          daysMarked: getDaysMarkedFromAttendance(w.dni, w.fullName, selectedCamp.name, formYear, formMonth),
           dailyRate: formDailyRate,
           foodConsumptionRate: 15.0,
         }));
@@ -297,6 +395,7 @@ export const ValuationPage: React.FC<ValuationPageProps> = ({ workers }) => {
         generatedRows = INITIAL_DEMO_ROWS.map((r) => ({
           ...r,
           dailyRate: formDailyRate,
+          daysMarked: getDaysMarkedFromAttendance(r.workerDni || '', r.workerName, selectedCamp.name, formYear, formMonth),
         }));
       }
     }
@@ -451,6 +550,39 @@ export const ValuationPage: React.FC<ValuationPageProps> = ({ workers }) => {
     alert('Asistencia copiada del primer trabajador a toda la planilla.');
   };
 
+  // 4b. SINCRONIZAR ASISTENCIAS DESDE MARCACIONES QR EN TIEMPO REAL
+  const handleSyncAttendance = () => {
+    if (!currentValuation || currentValuation.status === 'Cerrado') return;
+
+    const updatedRows = currentValuation.matrixRows.map((row) => {
+      // Find DNI from workers or matching row details
+      const foundWorker = workers.find(
+        (w) => w.fullName.toUpperCase() === row.workerName.toUpperCase() || w.dni === row.workerDni
+      );
+      const dni = row.workerDni || foundWorker?.dni || '';
+      
+      const newDays = getDaysMarkedFromAttendance(
+        dni,
+        row.workerName,
+        currentValuation.campName,
+        currentValuation.year,
+        currentValuation.month
+      );
+
+      const salary = row.workerSalary || foundWorker?.monthlyAverageSalary || 1650;
+
+      return {
+        ...row,
+        workerDni: dni,
+        workerSalary: salary,
+        daysMarked: newDays
+      };
+    });
+
+    recalculateValuation(currentValuation.id, updatedRows);
+    alert('Asistencias QR y Sueldos sincronizados correctamente con la valorización.');
+  };
+
   // 5. IMPORTAR EXCEL (MASIVO)
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -581,10 +713,16 @@ export const ValuationPage: React.FC<ValuationPageProps> = ({ workers }) => {
     (r) => r.month.toLowerCase() === consolidatedMonth.toLowerCase() && r.year === consolidatedYear
   );
 
+  const getRecordSalariesSum = (r: ValuationRecord) => {
+    return r.matrixRows.reduce((sum, row) => sum + (row.workerSalary || 1650), 0);
+  };
+
   const consolidatedTotalPersonal = consolidatedRecords.reduce((s, r) => s + r.totalPersonal, 0);
   const consolidatedTotalDays = consolidatedRecords.reduce((s, r) => s + r.totalDays, 0);
   const consolidatedTotalAlimentacion = consolidatedRecords.reduce((s, r) => s + r.totalAlimentacion, 0);
+  const consolidatedTotalSalaries = consolidatedRecords.reduce((s, r) => s + getRecordSalariesSum(r), 0);
   const consolidatedGrandTotal = consolidatedRecords.reduce((s, r) => s + r.totalAmount, 0);
+  const consolidatedCombinedGrandTotal = consolidatedGrandTotal + consolidatedTotalSalaries;
 
   const dayInitials = ['V', 'S', 'D', 'L', 'M', 'M', 'J', 'V', 'S', 'D', 'L', 'M', 'M', 'J', 'V', 'S', 'D', 'L', 'M', 'M', 'J', 'V', 'S', 'D', 'L', 'M', 'M', 'J', 'V', 'S', 'D'];
 
@@ -962,6 +1100,15 @@ export const ValuationPage: React.FC<ValuationPageProps> = ({ workers }) => {
                 </button>
 
                 <button
+                  onClick={handleSyncAttendance}
+                  disabled={currentValuation.status === 'Cerrado'}
+                  className="px-3.5 py-2 rounded-xl bg-amber-600/30 border border-amber-500/50 text-amber-200 text-xs font-bold hover:bg-amber-600/40 shadow flex items-center gap-1.5 disabled:opacity-50 animate-pulse"
+                  title="Sincroniza en tiempo real las asistencias marcadas vía QR para este mes y campamento"
+                >
+                  🔄 Sincronizar Asistencias QR
+                </button>
+
+                <button
                   onClick={() => fileInputRef.current?.click()}
                   disabled={currentValuation.status === 'Cerrado'}
                   className="px-3.5 py-2 rounded-xl bg-emerald-600/20 border border-emerald-500/40 text-emerald-300 text-xs font-bold hover:bg-emerald-600/30 shadow flex items-center gap-1.5 disabled:opacity-50"
@@ -1065,89 +1212,7 @@ export const ValuationPage: React.FC<ValuationPageProps> = ({ workers }) => {
                 <span className="text-blue-300 font-bold"><strong className="px-1.5 bg-blue-900 rounded">L</strong> Licencia (0%)</span>
                 <span className="text-rose-300 font-bold"><strong className="px-1.5 bg-rose-900 rounded">F</strong> Falta (0%)</span>
               </div>
-            </div>
-
-            {/* Add Row Form if open */}
-            {currentValuation.status === 'Abierto' && (
-              <form onSubmit={handleAddRowToMatrix} className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-7 gap-3 text-xs bg-slate-950 p-3.5 rounded-2xl border border-slate-800">
-                <div>
-                  <label className="block text-slate-400 font-bold mb-1">Habitación:</label>
-                  <input
-                    type="text"
-                    value={newRoomNumber}
-                    onChange={(e) => setNewRoomNumber(e.target.value)}
-                    className="w-full p-1.5 bg-slate-900 border border-slate-700 rounded-lg text-slate-100 font-mono"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-slate-400 font-bold mb-1">Tipo:</label>
-                  <select
-                    value={newRoomType}
-                    onChange={(e) => setNewRoomType(e.target.value)}
-                    className="w-full p-1.5 bg-slate-900 border border-slate-700 rounded-lg text-slate-100"
-                  >
-                    <option value="Simple">Simple</option>
-                    <option value="Doble">Doble</option>
-                    <option value="Suite VIP">Suite VIP</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-slate-400 font-bold mb-1">Trabajador:</label>
-                  <input
-                    type="text"
-                    placeholder="Nombre completo"
-                    value={newWorkerName}
-                    onChange={(e) => setNewWorkerName(e.target.value)}
-                    className="w-full p-1.5 bg-slate-900 border border-slate-700 rounded-lg text-slate-100"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-slate-400 font-bold mb-1">Subcontrata:</label>
-                  <input
-                    type="text"
-                    value={newSubcontractor}
-                    onChange={(e) => setNewSubcontractor(e.target.value)}
-                    className="w-full p-1.5 bg-slate-900 border border-slate-700 rounded-lg text-slate-100"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-slate-400 font-bold mb-1">Turno:</label>
-                  <select
-                    value={newShift}
-                    onChange={(e) => setNewShift(e.target.value as any)}
-                    className="w-full p-1.5 bg-slate-900 border border-slate-700 rounded-lg text-slate-100"
-                  >
-                    <option value="Día">Día</option>
-                    <option value="Noche">Noche</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-slate-400 font-bold mb-1">C. Costos:</label>
-                  <input
-                    type="text"
-                    value={newCostCenter}
-                    onChange={(e) => setNewCostCenter(e.target.value)}
-                    className="w-full p-1.5 bg-slate-900 border border-slate-700 rounded-lg text-amber-300 font-mono"
-                  />
-                </div>
-
-                <div className="flex items-end">
-                  <button
-                    type="submit"
-                    className="w-full py-1.5 px-3 gold-button rounded-lg text-xs font-black shadow flex items-center justify-center gap-1 text-slate-950"
-                  >
-                    <Plus className="w-3.5 h-3.5" /> Agregar
-                  </button>
-                </div>
-              </form>
-            )}
-          </div>
+            </div>          </div>
 
           {/* Spreadsheet 31-Day Matrix Table */}
           <div className="glass-panel p-6 rounded-3xl border border-indigo-500/30 space-y-4 overflow-hidden shadow-2xl">
@@ -1164,7 +1229,7 @@ export const ValuationPage: React.FC<ValuationPageProps> = ({ workers }) => {
               <table className="w-full text-[11px] text-left border-collapse min-w-[1400px]">
                 <thead className="bg-indigo-950/90 text-indigo-200 border-b border-indigo-500/40">
                   <tr>
-                    <th colSpan={6} className="p-2 border-r border-slate-800 text-center font-bold uppercase">
+                    <th colSpan={7} className="p-2 border-r border-slate-800 text-center font-bold uppercase">
                       DATOS DEL PERSONAL, SUBCONTRATA Y TURNO
                     </th>
                     {dayInitials.map((initial, i) => (
@@ -1184,6 +1249,7 @@ export const ValuationPage: React.FC<ValuationPageProps> = ({ workers }) => {
                     <th className="p-2 border-r border-slate-800 w-28">CARGO</th>
                     <th className="p-2 border-r border-slate-800 w-16 text-center">TURNO</th>
                     <th className="p-2 border-r border-slate-800 w-20 text-center text-amber-300">C. COSTOS</th>
+                    <th className="p-2 border-r border-slate-800 w-24 text-center text-emerald-300">SUELDO BASE</th>
 
                     {Array.from({ length: 31 }, (_, i) => (
                       <th key={i} className="p-1 border-r border-slate-800 text-center w-7 text-[10px]">
@@ -1234,6 +1300,9 @@ export const ValuationPage: React.FC<ValuationPageProps> = ({ workers }) => {
                         <td className="p-2 border-r border-slate-800 text-center font-bold text-amber-400 bg-amber-500/5">
                           {row.costCenter}
                         </td>
+                        <td className="p-2 border-r border-slate-800 text-center font-semibold text-emerald-400 bg-emerald-500/5">
+                          S/ {(row.workerSalary || 1650).toLocaleString('es-PE', { minimumFractionDigits: 2 })}
+                        </td>
 
                         {row.daysMarked.map((symbol, dIdx) => (
                           <td
@@ -1276,7 +1345,7 @@ export const ValuationPage: React.FC<ValuationPageProps> = ({ workers }) => {
 
                 <tfoot className="bg-slate-900 text-slate-100 font-mono text-xs border-t-2 border-indigo-500/50">
                   <tr>
-                    <td colSpan={37} className="p-3 text-right font-black uppercase text-slate-300">
+                    <td colSpan={38} className="p-3 text-right font-black uppercase text-slate-300">
                       SUBTOTAL HOSPEDAJE:
                     </td>
                     <td className="p-3 text-right font-black text-emerald-400 text-sm">
@@ -1284,7 +1353,7 @@ export const ValuationPage: React.FC<ValuationPageProps> = ({ workers }) => {
                     </td>
                   </tr>
                   <tr>
-                    <td colSpan={37} className="p-2 text-right font-extrabold uppercase text-slate-400">
+                    <td colSpan={38} className="p-2 text-right font-extrabold uppercase text-slate-400">
                       TOTAL ALIMENTACIÓN:
                     </td>
                     <td className="p-2 text-right font-extrabold text-blue-400">
@@ -1292,7 +1361,7 @@ export const ValuationPage: React.FC<ValuationPageProps> = ({ workers }) => {
                     </td>
                   </tr>
                   <tr>
-                    <td colSpan={37} className="p-2 text-right font-extrabold uppercase text-slate-400">
+                    <td colSpan={38} className="p-2 text-right font-extrabold uppercase text-slate-400">
                       IGV (18%):
                     </td>
                     <td className="p-2 text-right font-extrabold text-indigo-300">
@@ -1300,7 +1369,7 @@ export const ValuationPage: React.FC<ValuationPageProps> = ({ workers }) => {
                     </td>
                   </tr>
                   <tr className="bg-indigo-950">
-                    <td colSpan={37} className="p-3 text-right font-black uppercase text-amber-400 text-sm">
+                    <td colSpan={38} className="p-3 text-right font-black uppercase text-amber-400 text-sm">
                       TOTAL GENERAL MES:
                     </td>
                     <td className="p-3 text-right font-black gold-gradient-text text-base">
@@ -1472,32 +1541,44 @@ export const ValuationPage: React.FC<ValuationPageProps> = ({ workers }) => {
                   <th className="p-3.5 border-r border-slate-800 text-center">Personal</th>
                   <th className="p-3.5 border-r border-slate-800 text-center">Días Hospedados</th>
                   <th className="p-3.5 border-r border-slate-800 text-right">Consumo Alimentación</th>
-                  <th className="p-3.5 border-r border-slate-800 text-right">Total Monto (S/)</th>
+                  <th className="p-3.5 border-r border-slate-800 text-right text-emerald-400">Ingresos Personal (S/)</th>
+                  <th className="p-3.5 border-r border-slate-800 text-right text-amber-300">Valorización Camp. (S/)</th>
+                  <th className="p-3.5 border-r border-slate-800 text-right text-purple-300">Total Combinado (S/)</th>
                   <th className="p-3.5 text-center">Estado</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/70 bg-slate-950 font-mono text-xs">
-                {consolidatedRecords.map((cRec) => (
-                  <tr key={cRec.id} className="hover:bg-slate-900/60">
-                    <td className="p-3.5 border-r border-slate-800 font-sans font-bold text-slate-100 flex items-center gap-2">
-                      <Building2 className="w-4 h-4 text-amber-400" /> {cRec.campName}
-                    </td>
-                    <td className="p-3.5 border-r border-slate-800 font-sans text-slate-300">{cRec.clientName}</td>
-                    <td className="p-3.5 border-r border-slate-800 text-center font-bold text-slate-200">{cRec.totalPersonal}</td>
-                    <td className="p-3.5 border-r border-slate-800 text-center text-slate-400">{cRec.totalDays.toLocaleString()}</td>
-                    <td className="p-3.5 border-r border-slate-800 text-right font-bold text-blue-400">
-                      S/ {cRec.totalAlimentacion.toLocaleString('es-PE', { minimumFractionDigits: 2 })}
-                    </td>
-                    <td className="p-3.5 border-r border-slate-800 text-right font-black text-amber-300">
-                      S/ {cRec.totalAmount.toLocaleString('es-PE', { minimumFractionDigits: 2 })}
-                    </td>
-                    <td className="p-3.5 text-center">
-                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase ${cRec.status === 'Cerrado' ? 'bg-rose-500/20 text-rose-300' : 'bg-emerald-500/20 text-emerald-300'}`}>
-                        {cRec.status}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
+                {consolidatedRecords.map((cRec) => {
+                  const recordSalaries = getRecordSalariesSum(cRec);
+                  const recordCombined = cRec.totalAmount + recordSalaries;
+                  return (
+                    <tr key={cRec.id} className="hover:bg-slate-900/60">
+                      <td className="p-3.5 border-r border-slate-800 font-sans font-bold text-slate-100 flex items-center gap-2">
+                        <Building2 className="w-4 h-4 text-amber-400" /> {cRec.campName}
+                      </td>
+                      <td className="p-3.5 border-r border-slate-800 font-sans text-slate-300">{cRec.clientName}</td>
+                      <td className="p-3.5 border-r border-slate-800 text-center font-bold text-slate-200">{cRec.totalPersonal}</td>
+                      <td className="p-3.5 border-r border-slate-800 text-center text-slate-400">{cRec.totalDays.toLocaleString()}</td>
+                      <td className="p-3.5 border-r border-slate-800 text-right font-bold text-blue-400">
+                        S/ {cRec.totalAlimentacion.toLocaleString('es-PE', { minimumFractionDigits: 2 })}
+                      </td>
+                      <td className="p-3.5 border-r border-slate-800 text-right font-bold text-emerald-400">
+                        S/ {recordSalaries.toLocaleString('es-PE', { minimumFractionDigits: 2 })}
+                      </td>
+                      <td className="p-3.5 border-r border-slate-800 text-right font-black text-amber-300">
+                        S/ {cRec.totalAmount.toLocaleString('es-PE', { minimumFractionDigits: 2 })}
+                      </td>
+                      <td className="p-3.5 border-r border-slate-800 text-right font-black text-purple-300">
+                        S/ {recordCombined.toLocaleString('es-PE', { minimumFractionDigits: 2 })}
+                      </td>
+                      <td className="p-3.5 text-center">
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase ${cRec.status === 'Cerrado' ? 'bg-rose-500/20 text-rose-300' : 'bg-emerald-500/20 text-emerald-300'}`}>
+                          {cRec.status}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
 
               <tfoot className="bg-slate-900 border-t-2 border-amber-500/50 text-xs font-mono">
@@ -1510,8 +1591,14 @@ export const ValuationPage: React.FC<ValuationPageProps> = ({ workers }) => {
                   <td className="p-4 text-right font-black text-blue-400">
                     S/ {consolidatedTotalAlimentacion.toLocaleString('es-PE', { minimumFractionDigits: 2 })}
                   </td>
-                  <td colSpan={2} className="p-4 text-right font-black gold-gradient-text text-lg">
+                  <td className="p-4 text-right font-black text-emerald-400">
+                    S/ {consolidatedTotalSalaries.toLocaleString('es-PE', { minimumFractionDigits: 2 })}
+                  </td>
+                  <td className="p-4 text-right font-black text-amber-300">
                     S/ {consolidatedGrandTotal.toLocaleString('es-PE', { minimumFractionDigits: 2 })}
+                  </td>
+                  <td colSpan={2} className="p-4 text-right font-black gold-gradient-text text-lg">
+                    S/ {consolidatedCombinedGrandTotal.toLocaleString('es-PE', { minimumFractionDigits: 2 })}
                   </td>
                 </tr>
               </tfoot>
