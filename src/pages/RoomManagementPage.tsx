@@ -44,17 +44,16 @@ interface RoomManagementPageProps {
 }
 
 const REGISTERED_CAMPS_LIST = [
-  'Sede Morococha - Unidad Toromocho',
-  'Campamento Soledad',
-  'Campamento Diana - Módulo A',
-  'Campamento Diana - Módulo B',
-  'Campamento Central',
-  'Campamento Carhuacoto',
-  'Campamento Tuctu',
-  'Hotel Centro',
-  'Posada del Minero',
-  'San Cristóbal',
-  'Andaychagua',
+  'Campamento Miriam',
+  'Campamento Puris',
+  'Campamento René',
+  'Dianita Castro',
+  'Esther',
+  'Juanita Balvin',
+  'Maricela Mayta',
+  'Soledad Mayta',
+  'Yeny Mayta',
+  'Zenaida',
 ];
 
 export const RoomManagementPage: React.FC<RoomManagementPageProps> = ({

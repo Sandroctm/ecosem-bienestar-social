@@ -54,19 +54,18 @@ interface ValuationPageProps {
   attendanceRecords?: AttendanceRecord[];
 }
 
-// 11 Campamentos Mineros predefinidos
+// 10 Campamentos Mineros predefinidos
 const CAMPS_LIST = [
-  { id: 'c1', name: 'Hotel Centro', capacity: 120, location: 'Yauli, Junín' },
-  { id: 'c2', name: 'Diana', capacity: 250, location: 'Pucará' },
-  { id: 'c3', name: 'Posada del Minero', capacity: 180, location: 'Morococha' },
-  { id: 'c4', name: 'Campamento 4', capacity: 110, location: 'Yauli' },
-  { id: 'c5', name: 'San Cristóbal', capacity: 200, location: 'Chungar' },
-  { id: 'c6', name: 'Andaychagua', capacity: 160, location: 'Yauli' },
-  { id: 'c7', name: 'Carahuacra', capacity: 140, location: 'Morococha' },
-  { id: 'c8', name: 'Ticuaco', capacity: 90, location: 'Pucará' },
-  { id: 'c9', name: 'Pucará Central', capacity: 300, location: 'Pucará' },
-  { id: 'c10', name: 'Morococha Central', capacity: 220, location: 'Morococha' },
-  { id: 'c11', name: 'Pabellón VIP', capacity: 60, location: 'Hotel Centro' },
+  { id: 'c1', name: 'Campamento Miriam', capacity: 120, location: 'Yauli, Junín' },
+  { id: 'c2', name: 'Campamento Puris', capacity: 250, location: 'Pucará' },
+  { id: 'c3', name: 'Campamento René', capacity: 180, location: 'Morococha' },
+  { id: 'c4', name: 'Dianita Castro', capacity: 110, location: 'Yauli' },
+  { id: 'c5', name: 'Esther', capacity: 200, location: 'Chungar' },
+  { id: 'c6', name: 'Juanita Balvin', capacity: 160, location: 'Yauli' },
+  { id: 'c7', name: 'Maricela Mayta', capacity: 140, location: 'Morococha' },
+  { id: 'c8', name: 'Soledad Mayta', capacity: 90, location: 'Pucará' },
+  { id: 'c9', name: 'Yeny Mayta', capacity: 300, location: 'Pucará' },
+  { id: 'c10', name: 'Zenaida', capacity: 220, location: 'Morococha' },
 ];
 
 const CLIENTS_LIST = [

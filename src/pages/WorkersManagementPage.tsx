@@ -256,8 +256,16 @@ export const WorkersManagementPage: React.FC<WorkersManagementPageProps> = ({
               </label>
               <select
                 value={[
-                  'Hotel Centro', 'Diana', 'Posada del Minero', 'Campamento 4', 'San Cristóbal',
-                  'Andaychagua', 'Carahuacra', 'Ticuaco', 'Pucará Central', 'Morococha Central', 'Pabellón VIP'
+                  'Campamento Miriam',
+                  'Campamento Puris',
+                  'Campamento René',
+                  'Dianita Castro',
+                  'Esther',
+                  'Juanita Balvin',
+                  'Maricela Mayta',
+                  'Soledad Mayta',
+                  'Yeny Mayta',
+                  'Zenaida'
                 ].includes(camp) ? camp : (camp === '' ? '' : 'Otro')}
                 onChange={(e) => {
                   const val = e.target.value;
@@ -271,21 +279,20 @@ export const WorkersManagementPage: React.FC<WorkersManagementPageProps> = ({
                 required
               >
                 <option value="">-- Seleccionar --</option>
-                <option value="Hotel Centro">Hotel Centro</option>
-                <option value="Diana">Diana</option>
-                <option value="Posada del Minero">Posada del Minero</option>
-                <option value="Campamento 4">Campamento 4</option>
-                <option value="San Cristóbal">San Cristóbal</option>
-                <option value="Andaychagua">Andaychagua</option>
-                <option value="Carahuacra">Carahuacra</option>
-                <option value="Ticuaco">Ticuaco</option>
-                <option value="Pucará Central">Pucará Central</option>
-                <option value="Morococha Central">Morococha Central</option>
-                <option value="Pabellón VIP">Pabellón VIP</option>
+                <option value="Campamento Miriam">Campamento Miriam</option>
+                <option value="Campamento Puris">Campamento Puris</option>
+                <option value="Campamento René">Campamento René</option>
+                <option value="Dianita Castro">Dianita Castro</option>
+                <option value="Esther">Esther</option>
+                <option value="Juanita Balvin">Juanita Balvin</option>
+                <option value="Maricela Mayta">Maricela Mayta</option>
+                <option value="Soledad Mayta">Soledad Mayta</option>
+                <option value="Yeny Mayta">Yeny Mayta</option>
+                <option value="Zenaida">Zenaida</option>
                 <option value="Otro">Otro (Ingreso manual)...</option>
               </select>
               
-              {!['Hotel Centro', 'Diana', 'Posada del Minero', 'Campamento 4', 'San Cristóbal', 'Andaychagua', 'Carahuacra', 'Ticuaco', 'Pucará Central', 'Morococha Central', 'Pabellón VIP'].includes(camp) && camp !== '' && (
+              {!['Campamento Miriam', 'Campamento Puris', 'Campamento René', 'Dianita Castro', 'Esther', 'Juanita Balvin', 'Maricela Mayta', 'Soledad Mayta', 'Yeny Mayta', 'Zenaida'].includes(camp) && camp !== '' && (
                 <input
                   type="text"
                   value={camp === 'Nuevo Campamento' ? '' : camp}
