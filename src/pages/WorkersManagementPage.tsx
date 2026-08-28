@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   UserPlus,
   QrCode,
@@ -10,14 +10,21 @@ import {
   PhoneCall,
   Upload,
   Image as ImageIcon,
+  FileSpreadsheet,
+  AlertCircle,
+  Loader2,
 } from 'lucide-react';
+import confetti from 'canvas-confetti';
 import { Worker } from '../types';
 import { QRBadgeGenerator } from '../components/QRBadgeGenerator';
+import { ExcelImportModal } from '../components/ExcelImportModal';
 import { exportToExcel } from '../utils/excelExport';
+import { parseWorkersFromExcel, downloadWorkerExcelTemplate } from '../utils/excelImport';
 
 interface WorkersManagementPageProps {
   workers: Worker[];
   onAddWorker: (worker: Worker) => void;
+  onBatchAddWorkers?: (workers: Worker[]) => void;
   onUpdateWorker: (worker: Worker) => void;
   onDeleteWorker: (id: string) => void;
   onLoadDemoData: () => void;
@@ -26,6 +33,7 @@ interface WorkersManagementPageProps {
 export const WorkersManagementPage: React.FC<WorkersManagementPageProps> = ({
   workers,
   onAddWorker,
+  onBatchAddWorkers,
   onUpdateWorker,
   onDeleteWorker,
   onLoadDemoData,
@@ -33,6 +41,54 @@ export const WorkersManagementPage: React.FC<WorkersManagementPageProps> = ({
   const [selectedWorkerForBadge, setSelectedWorkerForBadge] = useState<Worker | null>(null);
   const [editingWorkerId, setEditingWorkerId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [isExcelImportModalOpen, setIsExcelImportModalOpen] = useState(false);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState<{ success: boolean; message: string } | null>(null);
+
+  const handleDirectExcelUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    setUploadStatus(null);
+    try {
+      const result = await parseWorkersFromExcel(file, workers);
+      if (result.parsedWorkers.length > 0) {
+        if (onBatchAddWorkers) {
+          onBatchAddWorkers(result.parsedWorkers);
+        } else {
+          result.parsedWorkers.forEach((w) => onAddWorker(w));
+        }
+
+        confetti({
+          particleCount: 150,
+          spread: 80,
+          origin: { y: 0.6 }
+        });
+
+        setUploadStatus({
+          success: true,
+          message: `¡Registro Masivo Exitoso! Se han importado y registrado ${result.parsedWorkers.length} colaboradores desde el archivo Excel.`
+        });
+      } else {
+        setUploadStatus({
+          success: false,
+          message: `No se encontraron registros nuevos válidos para registrar. Se detectaron ${result.duplicateCount} DNI duplicados y ${result.errorCount} filas incompletas.`
+        });
+      }
+    } catch (err) {
+      console.error(err);
+      setUploadStatus({
+        success: false,
+        message: 'Error al procesar el archivo Excel. Por favor verifique el formato de la plantilla.'
+      });
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
 
   // Form State
   const [dni, setDni] = useState('');
@@ -178,6 +234,42 @@ export const WorkersManagementPage: React.FC<WorkersManagementPageProps> = ({
             </button>
           )}
 
+          {/* Hidden File Input for Instant Excel Import */}
+          <input
+            type="file"
+            ref={fileInputRef}
+            accept=".xlsx, .xls, .csv"
+            onChange={handleDirectExcelUpload}
+            className="hidden"
+          />
+
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isUploading}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-black transition-all shadow-md active:scale-95 disabled:opacity-50"
+          >
+            {isUploading ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin text-slate-950" />
+                Registrando...
+              </>
+            ) : (
+              <>
+                <FileSpreadsheet className="w-4 h-4" />
+                Subir Excel de Personal
+              </>
+            )}
+          </button>
+
+          <button
+            onClick={downloadWorkerExcelTemplate}
+            className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 text-xs font-bold transition-all"
+            title="Descargar plantilla Excel oficial"
+          >
+            <Download className="w-3.5 h-3.5" />
+            Plantilla Modelo
+          </button>
+
           <button
             onClick={handleExportExcel}
             className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600/20 border border-emerald-500/40 text-emerald-300 text-xs font-bold hover:bg-emerald-600/30"
@@ -188,12 +280,57 @@ export const WorkersManagementPage: React.FC<WorkersManagementPageProps> = ({
         </div>
       </div>
 
+      {/* Upload Notification Alert Banner */}
+      {uploadStatus && (
+        <div className={`p-4 rounded-xl border flex items-center justify-between gap-3 animate-fadeIn ${
+          uploadStatus.success 
+            ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300' 
+            : 'bg-rose-500/10 border-rose-500/30 text-rose-300'
+        }`}>
+          <div className="flex items-center gap-2 text-xs font-bold">
+            {uploadStatus.success ? (
+              <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
+            ) : (
+              <AlertCircle className="w-5 h-5 text-rose-400 shrink-0" />
+            )}
+            <span>{uploadStatus.message}</span>
+          </div>
+          <button 
+            onClick={() => setUploadStatus(null)} 
+            className="text-[10px] uppercase font-bold hover:text-slate-100"
+          >
+            Cerrar [X]
+          </button>
+        </div>
+      )}
+
       {/* Form: Register New Worker */}
       <div className="glass-panel p-5 rounded-2xl border border-slate-800 space-y-4">
-        <h3 className="font-extrabold text-sm text-slate-100 flex items-center gap-2">
-          <UserPlus className="w-4 h-4 text-amber-400" />
-          Ingresar Datos de Nuevo Personal
-        </h3>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800/80 pb-3">
+          <h3 className="font-extrabold text-sm text-slate-100 flex items-center gap-2">
+            <UserPlus className="w-4 h-4 text-amber-400" />
+            Ingresar Datos de Nuevo Personal
+          </h3>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-300 text-xs font-bold transition-all"
+            >
+              <FileSpreadsheet className="w-3.5 h-3.5 text-amber-400" />
+              Cargar Masivo con Excel
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsExcelImportModalOpen(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 text-xs font-bold transition-all"
+              title="Abrir asistente de importación detallada con vista previa"
+            >
+              Asistente con Vista Previa
+            </button>
+          </div>
+        </div>
 
         <form onSubmit={handleSubmitNewWorker} className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
@@ -480,6 +617,20 @@ export const WorkersManagementPage: React.FC<WorkersManagementPageProps> = ({
           </div>
         </div>
       )}
+
+      {/* Excel Import Modal */}
+      <ExcelImportModal
+        isOpen={isExcelImportModalOpen}
+        onClose={() => setIsExcelImportModalOpen(false)}
+        existingWorkers={workers}
+        onImportWorkers={(newWorkers) => {
+          if (onBatchAddWorkers) {
+            onBatchAddWorkers(newWorkers);
+          } else {
+            newWorkers.forEach((w) => onAddWorker(w));
+          }
+        }}
+      />
 
     </div>
   );

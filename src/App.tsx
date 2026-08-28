@@ -332,6 +332,24 @@ export function App() {
     setWorkers([newWorker, ...workers]);
   };
 
+  const handleBatchAddWorkers = (newWorkers: Worker[]) => {
+    setWorkers((prev) => [...newWorkers, ...prev]);
+    newWorkers.forEach((w) => broadcastMutation('workers', 'INSERT', w));
+
+    const newLog = {
+      id: `AUD-${Date.now().toString().slice(-4)}`,
+      idLog: `AUD-${Date.now().toString().slice(-4)}`,
+      timestamp: new Date().toLocaleString(),
+      module: 'Registro de Personal',
+      action: `Importación Masiva Excel: ${newWorkers.length} colaboradores agregados`,
+      user: 'Administrador / Recursos Humanos',
+      ipAddress: '192.168.10.100',
+      hashSignature: `0x${Math.random().toString(16).substring(2, 10)}`,
+      details: `Se realizó la carga masiva vía Excel (.xlsx) de ${newWorkers.length} personal(es).`,
+    };
+    setAuditLogs((prev: any) => [newLog, ...prev]);
+  };
+
   const handleUpdateWorker = (updatedWorker: Worker) => {
     setWorkers(workers.map((w) => (w.id === updatedWorker.id ? updatedWorker : w)));
   };
@@ -750,6 +768,7 @@ export function App() {
             <WorkersManagementPage
               workers={workers}
               onAddWorker={handleAddWorker}
+              onBatchAddWorkers={handleBatchAddWorkers}
               onUpdateWorker={handleUpdateWorker}
               onDeleteWorker={handleDeleteWorker}
               onLoadDemoData={handleLoadDemoData}
