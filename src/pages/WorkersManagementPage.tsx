@@ -651,18 +651,27 @@ export const WorkersManagementPage: React.FC<WorkersManagementPageProps> = ({
         }}
       />
 
-      {/* Batch Print View */}
+      {/* Batch Print View - 2 Badges per A4 page */}
       {isBatchPrinting && (
         <div className="fixed inset-0 z-[100] bg-white print:block print:bg-white overflow-y-auto print-only">
-          <div className="grid grid-cols-2 gap-x-2 gap-y-4 p-4 mx-auto" style={{ width: '210mm' }}>
-            {filteredWorkers.map(w => (
-              <div key={w.id} className="avoid-page-break avoid-break-inside flex justify-center items-center">
-                <div style={{ transform: 'scale(0.9)', transformOrigin: 'top center' }}>
-                  <QRBadgeGenerator worker={w} />
-                </div>
+          {Array.from({ length: Math.ceil(filteredWorkers.length / 2) }).map((_, pageIndex) => {
+            const pair = filteredWorkers.slice(pageIndex * 2, pageIndex * 2 + 2);
+            return (
+              <div 
+                key={pageIndex} 
+                className="grid grid-cols-2 gap-4 p-6 mx-auto items-center justify-center min-h-[270mm]"
+                style={{ width: '210mm', pageBreakAfter: 'always', breakAfter: 'page' }}
+              >
+                {pair.map((w) => (
+                  <div key={w.id} className="avoid-page-break avoid-break-inside flex justify-center items-center">
+                    <div style={{ transform: 'scale(0.95)', transformOrigin: 'center' }}>
+                      <QRBadgeGenerator worker={w} />
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
+            );
+          })}
         </div>
       )}
 
