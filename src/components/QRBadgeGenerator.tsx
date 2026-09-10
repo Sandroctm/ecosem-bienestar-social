@@ -47,10 +47,6 @@ export const QRBadgeGenerator: React.FC<QRBadgeGeneratorProps> = ({ worker, onCl
 
         {/* Worker Main Card Content */}
         <div className="flex items-center gap-3 pt-1">
-          {/* Worker Photo */}
-          <div className="w-20 h-24 rounded-xl border-2 border-emerald-600 overflow-hidden shadow-md shrink-0 bg-slate-100">
-            <img src={worker.photoUrl} alt={worker.fullName} className="w-full h-full object-cover" />
-          </div>
 
           {/* Details */}
           <div className="min-w-0 flex-1 space-y-1">
