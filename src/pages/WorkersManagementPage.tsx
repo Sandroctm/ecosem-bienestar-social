@@ -651,7 +651,7 @@ export const WorkersManagementPage: React.FC<WorkersManagementPageProps> = ({
         }}
       />
 
-      {/* Batch Print View - 2 Large Badges per A4 page */}
+      {/* Batch Print View - 2 Large Badges per A4 page (Complete, no cutoff) */}
       {isBatchPrinting && (
         <div className="fixed inset-0 z-[100] bg-white print:block print:bg-white overflow-y-auto print-only">
           {Array.from({ length: Math.ceil(filteredWorkers.length / 2) }).map((_, pageIndex) => {
@@ -659,12 +659,12 @@ export const WorkersManagementPage: React.FC<WorkersManagementPageProps> = ({
             return (
               <div 
                 key={pageIndex} 
-                className="flex flex-col items-center justify-around py-8 px-4 mx-auto h-[290mm] min-h-[290mm] box-border"
-                style={{ width: '210mm', pageBreakAfter: 'always', breakAfter: 'page' }}
+                className="flex flex-col items-center justify-between p-6 mx-auto h-[265mm] box-border overflow-hidden"
+                style={{ width: '190mm', pageBreakAfter: 'always', breakAfter: 'page' }}
               >
                 {pair.map((w) => (
-                  <div key={w.id} className="avoid-page-break avoid-break-inside flex justify-center items-center w-full my-auto">
-                    <div style={{ transform: 'scale(1.35)', transformOrigin: 'center' }}>
+                  <div key={w.id} className="avoid-page-break avoid-break-inside flex justify-center items-center w-full py-2">
+                    <div style={{ transform: 'scale(1.18)', transformOrigin: 'center' }}>
                       <QRBadgeGenerator worker={w} />
                     </div>
                   </div>
