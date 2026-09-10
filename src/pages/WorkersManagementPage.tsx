@@ -207,6 +207,16 @@ export const WorkersManagementPage: React.FC<WorkersManagementPageProps> = ({
     exportToExcel(workers, 'Padron_Personal_ECOSEM', 'Personal Registrado');
   };
 
+  const [isBatchPrinting, setIsBatchPrinting] = useState(false);
+
+  const handleBatchPrint = () => {
+    setIsBatchPrinting(true);
+    setTimeout(() => {
+      window.print();
+      setIsBatchPrinting(false);
+    }, 500);
+  };
+
   return (
     <div className="space-y-6">
       
@@ -276,6 +286,15 @@ export const WorkersManagementPage: React.FC<WorkersManagementPageProps> = ({
           >
             <Download className="w-4 h-4" />
             Exportar Padrón (.xlsx)
+          </button>
+
+          <button
+            onClick={handleBatchPrint}
+            disabled={filteredWorkers.length === 0}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl gold-button text-slate-900 text-xs font-black shadow-md disabled:opacity-50"
+          >
+            <QrCode className="w-4 h-4" />
+            Imprimir Todos ({filteredWorkers.length})
           </button>
         </div>
       </div>
@@ -608,7 +627,7 @@ export const WorkersManagementPage: React.FC<WorkersManagementPageProps> = ({
 
       {/* QR Badge Modal */}
       {selectedWorkerForBadge && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md no-print">
           <div className="relative">
             <QRBadgeGenerator
               worker={selectedWorkerForBadge}
@@ -631,6 +650,21 @@ export const WorkersManagementPage: React.FC<WorkersManagementPageProps> = ({
           }
         }}
       />
+
+      {/* Batch Print View */}
+      {isBatchPrinting && (
+        <div className="fixed inset-0 z-[100] bg-white print:block print:bg-white overflow-y-auto print-only">
+          <div className="grid grid-cols-2 gap-x-2 gap-y-4 p-4 mx-auto" style={{ width: '210mm' }}>
+            {filteredWorkers.map(w => (
+              <div key={w.id} className="avoid-page-break avoid-break-inside flex justify-center items-center">
+                <div style={{ transform: 'scale(0.9)', transformOrigin: 'top center' }}>
+                  <QRBadgeGenerator worker={w} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
     </div>
   );
