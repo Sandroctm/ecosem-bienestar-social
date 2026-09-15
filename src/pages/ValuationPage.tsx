@@ -973,20 +973,7 @@ export const ValuationPage: React.FC<ValuationPageProps> = ({ workers, attendanc
                   </select>
                 </div>
 
-                <div>
-                  <label className="block text-slate-300 font-bold mb-1.5 flex items-center gap-1.5">
-                    <Briefcase className="w-4 h-4 text-amber-400" /> 🏢 Empresa / Contrata Minera Asociada
-                  </label>
-                  <select
-                    value={formClientId}
-                    onChange={(e) => handleClientChange(e.target.value)}
-                    className="w-full p-3 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 font-bold text-sm"
-                  >
-                    {CLIENTS_LIST.map((cli) => (
-                      <option key={cli.id} value={cli.id}>{cli.name}</option>
-                    ))}
-                  </select>
-                </div>
+
 
                 <div>
                   <label className="block text-slate-300 font-bold mb-1.5 flex items-center gap-1.5">
@@ -1194,58 +1181,6 @@ export const ValuationPage: React.FC<ValuationPageProps> = ({ workers, attendanc
 
             {/* Dynamic Filters Bar */}
             <div className="bg-slate-950/80 p-3.5 rounded-2xl border border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs">
-              <div className="flex flex-wrap items-center gap-3">
-                <span className="text-slate-400 font-bold flex items-center gap-1">
-                  <Filter className="w-3.5 h-3.5 text-amber-400" /> Filtros:
-                </span>
-
-                <select
-                  value={filterSubcontractor}
-                  onChange={(e) => setFilterSubcontractor(e.target.value)}
-                  className="bg-slate-900 border border-slate-700 text-slate-200 p-1.5 rounded-lg text-[11px]"
-                >
-                  <option value="Todos">Subcontrata: Todas</option>
-                  <option value="ECOSEM Contratistas">ECOSEM Contratistas</option>
-                  <option value="Consorcio Minero">Consorcio Minero</option>
-                  <option value="Techint Mineria">Techint Mineria</option>
-                  <option value="Alpayana S.A.">Alpayana S.A.</option>
-                </select>
-
-                <select
-                  value={filterCostCenter}
-                  onChange={(e) => setFilterCostCenter(e.target.value)}
-                  className="bg-slate-900 border border-slate-700 text-amber-300 p-1.5 rounded-lg text-[11px] font-mono"
-                >
-                  <option value="Todos">Centro Costos: Todos</option>
-                  <option value="EPM002">EPM002</option>
-                  <option value="EPM003">EPM003</option>
-                  <option value="EPM004">EPM004</option>
-                  <option value="EPM005">EPM005</option>
-                  <option value="EPM006">EPM006</option>
-                </select>
-
-                <select
-                  value={filterRoomType}
-                  onChange={(e) => setFilterRoomType(e.target.value)}
-                  className="bg-slate-900 border border-slate-700 text-slate-200 p-1.5 rounded-lg text-[11px]"
-                >
-                  <option value="Todos">Tipo Habitación: Todos</option>
-                  <option value="Simple">Simple</option>
-                  <option value="Doble">Doble</option>
-                  <option value="Suite VIP">Suite VIP</option>
-                </select>
-
-                <select
-                  value={filterShift}
-                  onChange={(e) => setFilterShift(e.target.value)}
-                  className="bg-slate-900 border border-slate-700 text-slate-200 p-1.5 rounded-lg text-[11px]"
-                >
-                  <option value="Todos">Turno: Todos</option>
-                  <option value="Día">Día</option>
-                  <option value="Noche">Noche</option>
-                </select>
-              </div>
-
               {/* Legend of Symbols */}
               <div className="flex items-center gap-3 text-[10px] bg-slate-900 px-3 py-1 rounded-xl border border-slate-800">
                 <span className="text-slate-400 font-bold">Leyenda:</span>
