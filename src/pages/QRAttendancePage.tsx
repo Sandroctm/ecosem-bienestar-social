@@ -15,10 +15,11 @@ import {
   ShieldAlert,
   Clock,
   Radio,
+  Trash2,
 } from 'lucide-react';
 import { AttendanceRecord, Worker } from '../types';
 import { QRBadgeGenerator } from '../components/QRBadgeGenerator';
-import { exportToExcel } from '../utils/excelExport';
+import { exportToExcel, exportAttendanceTareoToExcel } from '../utils/excelExport';
 import { validateAttendanceCheckin, AttendanceValidationResult } from '../utils/attendanceValidationEngine';
 import { AttendanceValidationModal } from '../components/AttendanceValidationModal';
 
@@ -27,6 +28,7 @@ interface QRAttendancePageProps {
   workers: Worker[];
   onOpenScanner: () => void;
   onExportExcel: () => void;
+  onClearAttendanceHistory?: () => void;
   onAddAttendance?: (
     workerDni: string,
     serviceType: 'Almuerzo' | 'Cena' | 'Alojamiento' | 'Ingreso Campamento' | 'Desayuno',
@@ -39,6 +41,7 @@ export const QRAttendancePage: React.FC<QRAttendancePageProps> = ({
   workers,
   onOpenScanner,
   onExportExcel,
+  onClearAttendanceHistory,
   onAddAttendance,
 }) => {
   const [selectedWorkerForBadge, setSelectedWorkerForBadge] = useState<Worker | null>(null);
@@ -49,6 +52,7 @@ export const QRAttendancePage: React.FC<QRAttendancePageProps> = ({
   const [quickServiceType, setQuickServiceType] = useState<'Almuerzo' | 'Cena' | 'Alojamiento' | 'Ingreso Campamento' | 'Desayuno'>('Almuerzo');
   const [pendingValidation, setPendingValidation] = useState<AttendanceValidationResult | null>(null);
   const [isValidationModalOpen, setIsValidationModalOpen] = useState(false);
+  const [showClearConfirmModal, setShowClearConfirmModal] = useState(false);
 
   const handleQuickSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -92,11 +96,11 @@ export const QRAttendancePage: React.FC<QRAttendancePageProps> = ({
             <h1 className="text-xl font-black text-slate-100">Control y Registro de Asistencia por QR</h1>
           </div>
           <p className="text-xs text-slate-400 mt-1">
-            Validación biométrica y de raciones de comedores / alojamiento con sincronización en tiempo real.
+            Validación biométrica con restricción estricta de <strong className="text-amber-400 font-bold">1 marcación por día por personal</strong>.
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2.5">
           <button
             onClick={onOpenScanner}
             className="flex items-center gap-2 px-4 py-2.5 rounded-xl gold-button text-xs font-black shadow-lg"
@@ -106,12 +110,24 @@ export const QRAttendancePage: React.FC<QRAttendancePageProps> = ({
           </button>
           
           <button
-            onClick={onExportExcel}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600/20 border border-emerald-500/40 text-emerald-300 text-xs font-bold hover:bg-emerald-600/30"
+            onClick={() => exportAttendanceTareoToExcel(attendanceRecords, workers)}
+            className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-emerald-600/20 border border-emerald-500/40 text-emerald-300 text-xs font-bold hover:bg-emerald-600/30 transition shadow-md"
+            title="Exportar Matriz Mensual de Tareo Minero en Excel"
           >
             <Download className="w-4 h-4" />
-            Exportar Asistencia (.xlsx)
+            Exportar Tareo Minero (.xlsx)
           </button>
+
+          {onClearAttendanceHistory && (
+            <button
+              onClick={() => setShowClearConfirmModal(true)}
+              className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-bold hover:bg-rose-500/20 hover:border-rose-500/50 transition"
+              title="Borrar todo el historial acumulado de asistencias"
+            >
+              <Trash2 className="w-4 h-4 text-rose-400" />
+              Borrar Historial
+            </button>
+          )}
         </div>
       </div>
 
@@ -331,6 +347,46 @@ export const QRAttendancePage: React.FC<QRAttendancePageProps> = ({
           setPendingValidation(null);
         }}
       />
+
+      {/* Modal de Confirmación para Borrar Historial */}
+      {showClearConfirmModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+          <div className="bg-slate-900 border border-rose-500/40 p-6 rounded-2xl max-w-md w-full space-y-4 shadow-2xl">
+            <div className="flex items-center gap-3 text-rose-400">
+              <div className="p-2 bg-rose-500/20 border border-rose-500/40 rounded-xl">
+                <Trash2 className="w-6 h-6 text-rose-400" />
+              </div>
+              <h3 className="font-extrabold text-base text-slate-100">
+                ¿Borrar Todo el Historial de Asistencia?
+              </h3>
+            </div>
+
+            <p className="text-xs text-slate-300 leading-relaxed">
+              Esta acción eliminará <strong>permanentemente</strong> todas las marcaciones registradas hasta la fecha. El historial quedará completamente en cero.
+            </p>
+
+            <div className="flex justify-end gap-3 pt-2">
+              <button
+                onClick={() => setShowClearConfirmModal(false)}
+                className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => {
+                  if (onClearAttendanceHistory) {
+                    onClearAttendanceHistory();
+                  }
+                  setShowClearConfirmModal(false);
+                }}
+                className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-black shadow-lg transition"
+              >
+                Sí, Borrar Historial
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

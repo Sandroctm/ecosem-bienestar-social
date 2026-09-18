@@ -10,10 +10,54 @@ export interface AttendanceValidationResult {
   medicalLeaveActive?: boolean;
 }
 
+export function isTodayRecord(timestampStr: string, referenceDate: Date = new Date()): boolean {
+  if (!timestampStr) return false;
+
+  const refYear = referenceDate.getFullYear();
+  const refMonth = referenceDate.getMonth() + 1;
+  const refDay = referenceDate.getDate();
+
+  // Try extracting DD/MM/YYYY or D/M/YYYY
+  const ddmmyyyyMatch = timestampStr.match(/(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})/);
+  if (ddmmyyyyMatch) {
+    const day = parseInt(ddmmyyyyMatch[1], 10);
+    const month = parseInt(ddmmyyyyMatch[2], 10);
+    const year = parseInt(ddmmyyyyMatch[3], 10);
+    if (day === refDay && month === refMonth && year === refYear) {
+      return true;
+    }
+  }
+
+  // Try extracting YYYY-MM-DD
+  const yyyymmddMatch = timestampStr.match(/(\d{4})[\/-](\d{1,2})[\/-](\d{1,2})/);
+  if (yyyymmddMatch) {
+    const year = parseInt(yyyymmddMatch[1], 10);
+    const month = parseInt(yyyymmddMatch[2], 10);
+    const day = parseInt(yyyymmddMatch[3], 10);
+    if (day === refDay && month === refMonth && year === refYear) {
+      return true;
+    }
+  }
+
+  // Fallback: standard Date parsing
+  const parsed = new Date(timestampStr);
+  if (!isNaN(parsed.getTime())) {
+    return (
+      parsed.getFullYear() === refYear &&
+      parsed.getMonth() + 1 === refMonth &&
+      parsed.getDate() === refDay
+    );
+  }
+
+  // Fallback: substring matching
+  const todayLocale = referenceDate.toLocaleDateString('es-PE');
+  return timestampStr.includes(todayLocale);
+}
+
 /**
  * Motor de Validación Milimétrica y Anti-Fraude de Asistencia
  * Valida 4 candados críticos antes de permitir el ingreso o la entrega de ración:
- * 1. Duplicidad de ración/ingreso el mismo día.
+ * 1. RESTRICCIÓN ABSOLUTA: Máximo 1 marcación por día por personal.
  * 2. Vencimiento de póliza SCTR.
  * 3. Descanso médico activo (incapacidad laboral para trabajo de campo).
  * 4. Padrón oficial de trabajadores.
@@ -32,23 +76,16 @@ export function validateAttendanceCheckin(
     (w) => w.dni === targetDni || w.dni === cleanDni || w.qrCodeValue.includes(cleanDni) || w.id === cleanDni
   );
 
-  const todayStr = new Date().toLocaleDateString('es-PE'); // "9/8/2026"
-
-  // 1. Validar Duplicidad de Ración / Marcación en el mismo día y mismo servicio
+  // 1. Validar Duplicidad de Marcación en el mismo día por el mismo personal (MÁXIMO 1 POR DÍA POR TRABAJADOR)
   const existingRecordToday = attendanceRecords.find((rec) => {
-    // Comparar contra el día de hoy en formato local del navegador
-    const recTimestamp = rec.timestamp || '';
-    const isSameDay =
-      recTimestamp.includes(todayStr) ||
-      recTimestamp.startsWith(new Date().toISOString().split('T')[0]);
-    return rec.workerDni === targetDni && rec.serviceType === serviceType && isSameDay;
+    return rec.workerDni === targetDni && isTodayRecord(rec.timestamp);
   });
 
   if (existingRecordToday) {
     return {
       allowed: false,
       status: 'Duplicado Observado',
-      message: `⚠️ RACIÓN / MARCACIÓN YA REGISTRADA HOY: El trabajador ya marcó ${serviceType} a las ${existingRecordToday.timestamp}.`,
+      message: `⛔ MARCACIÓN DENEGADA: El trabajador con DNI ${targetDni} ya registró su asistencia el día de hoy (${existingRecordToday.timestamp} - ${existingRecordToday.serviceType}). Solo se permite 1 marcación por día por personal.`,
       previousScanTimestamp: existingRecordToday.timestamp,
       worker: foundWorker,
     };

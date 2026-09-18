@@ -106,7 +106,7 @@ import { RoomDeliveryDocumentModal } from './components/RoomDeliveryDocumentModa
 import { WhatsAppIncidentModal } from './components/WhatsAppIncidentModal';
 
 // Excel Exporter
-import { exportToExcel } from './utils/excelExport';
+import { exportToExcel, exportAttendanceTareoToExcel } from './utils/excelExport';
 
 // Google Sheets integration
 import { sendToGoogleSheets } from './utils/googleSheets';
@@ -358,9 +358,15 @@ export function App() {
     setWorkers(workers.filter((w) => w.id !== workerId));
   };
 
+  const handleClearAttendanceHistory = () => {
+    setAttendanceRecords([]);
+    localStorage.removeItem('ecosem_attendance');
+    localStorage.removeItem('ecosem_cloud_live_attendance_records_global');
+  };
+
   const handleLoadDemoData = () => {
     setWorkers(DEMO_WORKERS);
-    setAttendanceRecords(DEMO_ATTENDANCE);
+    setAttendanceRecords([]);
     setBenefitRequests(DEMO_BENEFIT_REQUESTS);
   };
 
@@ -467,7 +473,7 @@ export function App() {
         exportToExcel(workers, 'Padron_Personal_ECOSEM', 'Personal');
         break;
       case 'qr-attendance':
-        exportToExcel(attendanceRecords, 'Asistencia_QR_ECOSEM', 'Asistencia QR');
+        exportAttendanceTareoToExcel(attendanceRecords, workers, 'Tareo_Asistencia_ECOSEM');
         break;
       case 'valuation':
         exportToExcel(valuations, 'Valorizacion_Precio_Diario_ECOSEM', 'Valorizaciones');
@@ -778,7 +784,9 @@ export function App() {
           {activeModule === 'worker-portal' && (
             <WorkerPortalPage
               workers={workers}
+              attendanceRecords={attendanceRecords}
               onSaveIncident={handleSaveIncident}
+              onAddAttendance={handleScanSuccess}
             />
           )}
 
@@ -788,6 +796,7 @@ export function App() {
               workers={workers}
               onOpenScanner={() => setIsQRScannerOpen(true)}
               onExportExcel={handleExportCurrentModuleToExcel}
+              onClearAttendanceHistory={handleClearAttendanceHistory}
               onAddAttendance={handleScanSuccess}
             />
           )}

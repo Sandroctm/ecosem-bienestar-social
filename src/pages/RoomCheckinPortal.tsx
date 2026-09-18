@@ -292,54 +292,82 @@ export const RoomCheckinPortal: React.FC<RoomCheckinPortalProps> = ({
         </div>
       </div>
 
-      {/* Recent Check-Ins Table */}
+      {/* Personal Attendance History Table (Strictly for the identified worker) */}
       <div className="w-full max-w-2xl bg-slate-900/50 border border-slate-800 rounded-2xl p-4 mt-6 space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5">
-            <Clock className="w-4 h-4 text-slate-400" />
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-300">
-              Llegadas Recientes a Cuartos (Hoy)
+            <Clock className="w-4 h-4 text-amber-400" />
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-200">
+              {scannedWorker
+                ? `Mi Historial Personal de Registros (${scannedWorker.fullName})`
+                : 'Historial Personal de Registros'}
             </h3>
           </div>
-          <span className="text-[10px] font-bold bg-slate-850 px-2 py-0.5 rounded text-slate-400 border border-slate-800">
-            Total: {lodgingLogs.length} marcaciones
-          </span>
+          {scannedWorker && (
+            <span className="text-[10px] font-bold bg-slate-850 px-2.5 py-0.5 rounded text-amber-400 border border-slate-800 font-mono">
+              DNI: {scannedWorker.dni}
+            </span>
+          )}
         </div>
 
-        {lodgingLogs.length === 0 ? (
-          <p className="text-center py-6 text-slate-500 text-xs">
-            No se han registrado entradas a cuartos todavía.
-          </p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-[11px] text-left text-slate-300">
-              <thead>
-                <tr className="border-b border-slate-800 text-[10px] text-slate-500 uppercase font-bold">
-                  <th className="py-2">Hora</th>
-                  <th className="py-2">Habitación</th>
-                  <th className="py-2">DNI</th>
-                  <th className="py-2">Nombre</th>
-                  <th className="py-2">Empresa</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-800/50">
-                {lodgingLogs.slice(0, 5).map((log) => (
-                  <tr key={log.id} className="hover:bg-slate-850/30">
-                    <td className="py-2 font-mono text-slate-400">
-                      {log.timestamp.split(', ')[1] || log.timestamp}
-                    </td>
-                    <td className="py-2 font-bold text-amber-400">
-                      {log.roomNumber || 'Común'}
-                    </td>
-                    <td className="py-2 font-mono">{log.workerDni}</td>
-                    <td className="py-2 font-semibold text-slate-200">{log.workerName}</td>
-                    <td className="py-2 text-slate-400 truncate max-w-[120px]">{log.company}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        {!scannedWorker ? (
+          <div className="text-center py-6 px-4 bg-slate-950/60 rounded-xl border border-dashed border-slate-800 space-y-1">
+            <Smartphone className="w-6 h-6 text-amber-400/60 mx-auto" />
+            <p className="text-xs font-semibold text-slate-300">
+              Historial Personal Protegido
+            </p>
+            <p className="text-[11px] text-slate-500">
+              Ingrese su DNI arriba o escanee su código QR para visualizar únicamente su historial personal de marcaciones.
+            </p>
           </div>
-        )}
+        ) : (() => {
+          const personalHistory = attendanceRecords.filter((rec) => rec.workerDni === scannedWorker.dni);
+
+          if (personalHistory.length === 0) {
+            return (
+              <p className="text-center py-6 text-slate-500 text-xs">
+                No registra marcaciones previas en el historial personal.
+              </p>
+            );
+          }
+
+          return (
+            <div className="overflow-x-auto">
+              <table className="w-full text-[11px] text-left text-slate-300">
+                <thead>
+                  <tr className="border-b border-slate-800 text-[10px] text-slate-500 uppercase font-bold">
+                    <th className="py-2">Fecha y Hora</th>
+                    <th className="py-2">Servicio / Marcación</th>
+                    <th className="py-2">Habitación / Campamento</th>
+                    <th className="py-2">Dispositivo / Garita</th>
+                    <th className="py-2">Estado</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-800/50">
+                  {personalHistory.map((log) => (
+                    <tr key={log.id} className="hover:bg-slate-850/30">
+                      <td className="py-2 font-mono text-slate-400">
+                        {log.timestamp}
+                      </td>
+                      <td className="py-2 font-bold text-amber-400">
+                        {log.serviceType}
+                      </td>
+                      <td className="py-2 font-semibold text-slate-200">
+                        {log.roomNumber ? `Hab. ${log.roomNumber}` : log.camp}
+                      </td>
+                      <td className="py-2 text-slate-400 truncate max-w-[140px]">{log.scannedBy}</td>
+                      <td className="py-2">
+                        <span className="inline-flex items-center gap-1 text-[10px] font-extrabold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/30">
+                          <CheckCircle className="w-3 h-3 text-emerald-400" /> {log.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          );
+        })()}
       </div>
 
       {/* Google Sheets Settings Modal */}

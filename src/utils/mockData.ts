@@ -139,64 +139,7 @@ export const DEMO_WORKERS: Worker[] = [
 ];
 
 // Demo attendance records for instant testing
-export const DEMO_ATTENDANCE: AttendanceRecord[] = [
-  {
-    id: 'ATT-D001',
-    timestamp: new Date().toLocaleString(),
-    workerDni: '45892011',
-    workerName: 'Juan Pérez Ramírez',
-    company: 'Consorcio Minero Arequipa',
-    camp: 'Campamento Norte - Las Bambas',
-    serviceType: 'Almuerzo',
-    status: 'Válido',
-    scannedBy: 'Escáner Garita ECOSEM',
-  },
-  {
-    id: 'ATT-D002',
-    timestamp: new Date().toLocaleString(),
-    workerDni: '71239844',
-    workerName: 'María Flores Quispe',
-    company: 'Servicios Logísticos del Sur',
-    camp: 'Campamento Central',
-    serviceType: 'Alojamiento',
-    status: 'Válido',
-    scannedBy: 'Auto-Registro Habitación A-204',
-    roomNumber: 'A-204',
-  },
-  {
-    id: 'ATT-D003',
-    timestamp: new Date().toLocaleString(),
-    workerDni: '10982377',
-    workerName: 'Carlos Mamani Choque',
-    company: 'Techint Minería',
-    camp: 'Campamento Sur - Yauri',
-    serviceType: 'Ingreso Campamento',
-    status: 'Válido',
-    scannedBy: 'Escáner Garita ECOSEM',
-  },
-  {
-    id: 'ATT-D004',
-    timestamp: new Date().toLocaleString(),
-    workerDni: '20456789',
-    workerName: 'Rosa Huamán Villanueva',
-    company: 'ECOSEM Contratistas',
-    camp: 'Campamento Central',
-    serviceType: 'Cena',
-    status: 'Válido',
-    scannedBy: 'Escáner Comedor Central',
-  },
-  {
-    id: 'ATT-D005',
-    timestamp: new Date().toLocaleString(),
-    workerDni: '30567891',
-    workerName: 'Pedro Condori Ticona',
-    company: 'Minera Las Bambas S.A.',
-    camp: 'Campamento Norte - Las Bambas',
-    serviceType: 'Desayuno',
-    status: 'Válido',
-    scannedBy: 'Escáner Comedor Norte',
-  },
-];
+export const DEMO_ATTENDANCE: AttendanceRecord[] = [];
 
 // Demo benefit requests
 export const DEMO_BENEFIT_REQUESTS: BenefitRequest[] = [

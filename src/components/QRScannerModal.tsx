@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Html5QrcodeScanner, Html5Qrcode } from 'html5-qrcode';
 import { QRCodeSVG } from 'qrcode.react';
-import { X, CheckCircle2, QrCode, Smartphone, Sparkles, UserCheck, Camera, Layers, ShieldAlert, Utensils, BedDouble, LogIn, Coffee, Upload, FileImage, Zap } from 'lucide-react';
+import { X, CheckCircle2, QrCode, Smartphone, Sparkles, UserCheck, Camera, Layers, ShieldAlert, Utensils, BedDouble, LogIn, Coffee, Upload, FileImage, Zap, Clock } from 'lucide-react';
 import { Worker, AttendanceRecord } from '../types';
 import { getQrBaseUrl } from '../App';
 import { sanitizeAndValidateQRPayload } from '../utils/qrPayloadSanitizer';
@@ -508,21 +508,52 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({
           )}
         </div>
 
-        {/* Last scanned preview card */}
+        {/* Last scanned preview card & personal history */}
         {lastScannedWorker && (
-          <div className="bg-slate-950/90 border border-emerald-500/40 rounded-xl p-3 flex items-center gap-3 shadow-inner">
-            <img
-              src={lastScannedWorker.photoUrl}
-              alt={lastScannedWorker.fullName}
-              className="w-12 h-12 rounded-lg object-cover border border-emerald-400 shrink-0"
-            />
-            <div className="flex-1 text-xs min-w-0">
-              <div className="font-extrabold text-slate-100 truncate">{lastScannedWorker.fullName}</div>
-              <div className="text-slate-400 text-[11px] truncate">{lastScannedWorker.company}</div>
-              <div className="text-emerald-400 font-bold text-[11px] flex items-center gap-1">
-                <CheckCircle2 className="w-3 h-3 text-emerald-400" />
-                <span>Marcado: {selectedService} • {new Date().toLocaleTimeString()}</span>
+          <div className="bg-slate-950/90 border border-amber-500/40 rounded-xl p-3.5 space-y-2.5 shadow-inner">
+            <div className="flex items-center gap-3">
+              <img
+                src={lastScannedWorker.photoUrl}
+                alt={lastScannedWorker.fullName}
+                className="w-12 h-12 rounded-lg object-cover border border-amber-400 shrink-0"
+              />
+              <div className="flex-1 text-xs min-w-0">
+                <div className="font-extrabold text-slate-100 truncate">{lastScannedWorker.fullName}</div>
+                <div className="text-slate-400 text-[11px] truncate">{lastScannedWorker.company} • DNI: {lastScannedWorker.dni}</div>
+                <div className="text-amber-400 font-bold text-[11px] flex items-center gap-1">
+                  <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                  <span>Servicio Seleccionado: {selectedService}</span>
+                </div>
               </div>
+            </div>
+
+            {/* Personal Attendance History for scanned worker */}
+            <div className="pt-2 border-t border-slate-800 space-y-1.5">
+              <span className="text-[10px] uppercase font-bold text-slate-400 flex items-center gap-1">
+                <Clock className="w-3 h-3 text-amber-400" />
+                Historial Personal de Asistencias:
+              </span>
+              {(() => {
+                const history = attendanceRecords.filter((rec) => rec.workerDni === lastScannedWorker.dni);
+                if (history.length === 0) {
+                  return (
+                    <p className="text-[10px] text-slate-500 italic">
+                      No hay marcaciones previas registradas para este trabajador.
+                    </p>
+                  );
+                }
+                return (
+                  <div className="space-y-1 max-h-28 overflow-y-auto pr-1">
+                    {history.map((h) => (
+                      <div key={h.id} className="bg-slate-900 px-2 py-1 rounded text-[10px] flex items-center justify-between text-slate-300 border border-slate-800">
+                        <span className="font-mono text-amber-400 font-bold">{h.serviceType}</span>
+                        <span className="font-mono text-slate-400">{h.timestamp}</span>
+                        <span className="text-emerald-400 font-semibold">{h.status}</span>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
             </div>
           </div>
         )}
