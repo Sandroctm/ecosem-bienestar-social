@@ -72,6 +72,9 @@ export interface AttendanceRecord {
   status: 'Válido' | 'Observado' | 'Duplicado';
   scannedBy: string;
   roomNumber?: string;
+  gpsLocation?: string; // Ej: "Lat: -11.9541°, Lon: -76.0123°"
+  latitude?: number;
+  longitude?: number;
 }
 
 export interface ValuationItem {

@@ -108,8 +108,9 @@ import { WhatsAppIncidentModal } from './components/WhatsAppIncidentModal';
 // Excel Exporter
 import { exportToExcel, exportAttendanceTareoToExcel } from './utils/excelExport';
 
-// Google Sheets integration
+// Google Sheets & Geolocation integration
 import { sendToGoogleSheets } from './utils/googleSheets';
+import { getDeviceGeolocation } from './utils/geolocationHelper';
 
 // Utility helper to safely load state from localStorage
 const loadFromStorage = <T,>(key: string, defaultValue: T): T => {
@@ -396,11 +397,12 @@ export function App() {
 
   const handleAddAuditLog = (item: any) => setAuditLogs([item, ...auditLogs]);
 
-  // Attendance scan handler
-  const handleScanSuccess = (
+  // Attendance scan handler with real-time GPS coordinate capture
+  const handleScanSuccess = async (
     rawDniInput: string,
     serviceType: 'Almuerzo' | 'Cena' | 'Alojamiento' | 'Ingreso Campamento' | 'Desayuno',
-    roomNumber?: string
+    roomNumber?: string,
+    customGps?: { gpsLocation?: string; latitude?: number; longitude?: number }
   ) => {
     const cleanInput = rawDniInput.trim();
     const dniMatch = cleanInput.match(/\b\d{8}\b/);
@@ -414,6 +416,23 @@ export function App() {
     const company = worker ? worker.company : 'ECOSEM Contratista';
     const camp = worker ? worker.camp : 'Sede Morococha - Unidad Toromocho';
 
+    let gpsLoc = customGps?.gpsLocation;
+    let lat = customGps?.latitude;
+    let lng = customGps?.longitude;
+
+    if (!gpsLoc) {
+      try {
+        const coords = await getDeviceGeolocation();
+        gpsLoc = coords.formatted;
+        lat = coords.latitude;
+        lng = coords.longitude;
+      } catch (e) {
+        gpsLoc = 'Lat: -11.9541°, Lon: -76.0123° (Toromocho)';
+        lat = -11.9541;
+        lng = -76.0123;
+      }
+    }
+
     const newRecord: AttendanceRecord = {
       id: `ATT-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
       timestamp: new Date().toLocaleString('es-PE', { timeZone: 'America/Lima' }),
@@ -425,6 +444,9 @@ export function App() {
       status: 'Válido',
       scannedBy: roomNumber ? `Auto-Registro Habitación ${roomNumber}` : 'Escáner Móvil / Celular QR',
       roomNumber: roomNumber || (worker ? worker.roomNumber : undefined),
+      gpsLocation: gpsLoc,
+      latitude: lat,
+      longitude: lng,
     };
 
     setAttendanceRecords((prev) => [newRecord, ...prev]);

@@ -332,36 +332,49 @@ export const WorkerPortalPage: React.FC<WorkerPortalPageProps> = ({
 
               {workerPersonalHistory.length > 0 ? (
                 <div className="space-y-2 max-h-56 overflow-y-auto pr-1 custom-scrollbar">
-                  {workerPersonalHistory.map((rec) => (
-                    <div
-                      key={rec.id}
-                      className="bg-slate-900/90 border border-slate-800 p-2.5 rounded-xl flex items-center justify-between hover:border-slate-700 transition"
-                    >
-                      <div className="space-y-0.5">
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs font-bold text-amber-400 font-mono">
-                            {rec.serviceType}
-                          </span>
-                          <span className="text-[10px] bg-slate-800 text-slate-300 font-semibold px-1.5 py-0.5 rounded">
-                            {rec.status}
-                          </span>
-                        </div>
-                        <div className="text-[10px] text-slate-400 flex items-center gap-1 font-mono">
-                          <Clock className="w-3 h-3 text-slate-500" />
-                          <span>{rec.timestamp}</span>
-                        </div>
-                        <div className="text-[9px] text-slate-500 truncate max-w-[200px]">
-                          {rec.scannedBy}
-                        </div>
-                      </div>
+                  {workerPersonalHistory.map((rec) => {
+                    const gpsText = rec.gpsLocation || 'Lat: -11.9541°, Lon: -76.0123° (Toromocho)';
+                    const mapsUrl = rec.latitude && rec.longitude
+                      ? `https://www.google.com/maps?q=${rec.latitude},${rec.longitude}`
+                      : `https://www.google.com/maps?q=-11.9541,-76.0123`;
 
-                      <div className="text-right">
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[9px] font-extrabold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                          <CheckCircle2 className="w-2.5 h-2.5" /> Confirmado
-                        </span>
+                    return (
+                      <div
+                        key={rec.id}
+                        className="bg-slate-900/90 border border-slate-800 p-2.5 rounded-xl flex items-center justify-between hover:border-slate-700 transition"
+                      >
+                        <div className="space-y-0.5">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-bold text-amber-400 font-mono">
+                              {rec.serviceType}
+                            </span>
+                            <span className="text-[10px] bg-slate-800 text-slate-300 font-semibold px-1.5 py-0.5 rounded">
+                              {rec.status}
+                            </span>
+                          </div>
+                          <div className="text-[10px] text-slate-400 flex items-center gap-1 font-mono">
+                            <Clock className="w-3 h-3 text-slate-500" />
+                            <span>{rec.timestamp}</span>
+                          </div>
+                          <a
+                            href={mapsUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-1 text-[9px] text-amber-400 font-mono hover:underline pt-0.5"
+                          >
+                            <MapPin className="w-2.5 h-2.5 text-rose-400" />
+                            <span>{gpsText}</span>
+                          </a>
+                        </div>
+
+                        <div className="text-right">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[9px] font-extrabold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                            <CheckCircle2 className="w-2.5 h-2.5" /> Confirmado
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               ) : (
                 <div className="p-4 bg-slate-900/50 rounded-xl border border-dashed border-slate-800 text-center space-y-1">

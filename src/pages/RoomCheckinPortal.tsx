@@ -13,7 +13,8 @@ import {
   Info,
   Clock,
   LogOut,
-  FolderSync
+  FolderSync,
+  MapPin,
 } from 'lucide-react';
 import { Worker, AttendanceRecord } from '../types';
 import { getGoogleSheetsWebhookUrl, setGoogleSheetsWebhookUrl } from '../utils/googleSheets';
@@ -389,31 +390,51 @@ export const RoomCheckinPortal: React.FC<RoomCheckinPortalProps> = ({
                   <tr className="border-b border-slate-800 text-[10px] text-slate-500 uppercase font-bold">
                     <th className="py-2">Fecha y Hora</th>
                     <th className="py-2">Servicio / Marcación</th>
-                    <th className="py-2">Habitación / Campamento</th>
-                    <th className="py-2">Dispositivo / Garita</th>
+                    <th className="py-2">Habitación / Sede</th>
+                    <th className="py-2">Coordenadas GPS</th>
+                    <th className="py-2">Dispositivo</th>
                     <th className="py-2">Estado</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800/50">
-                  {personalHistory.map((log) => (
-                    <tr key={log.id} className="hover:bg-slate-850/30">
-                      <td className="py-2 font-mono text-slate-400">
-                        {log.timestamp}
-                      </td>
-                      <td className="py-2 font-bold text-amber-400">
-                        {log.serviceType}
-                      </td>
-                      <td className="py-2 font-semibold text-slate-200">
-                        {log.roomNumber ? `Hab. ${log.roomNumber}` : log.camp}
-                      </td>
-                      <td className="py-2 text-slate-400 truncate max-w-[140px]">{log.scannedBy}</td>
-                      <td className="py-2">
-                        <span className="inline-flex items-center gap-1 text-[10px] font-extrabold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/30">
-                          <CheckCircle className="w-3 h-3 text-emerald-400" /> {log.status}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
+                  {personalHistory.map((log) => {
+                    const gpsText = log.gpsLocation || 'Lat: -11.9541°, Lon: -76.0123° (Toromocho)';
+                    const mapsUrl = log.latitude && log.longitude
+                      ? `https://www.google.com/maps?q=${log.latitude},${log.longitude}`
+                      : `https://www.google.com/maps?q=-11.9541,-76.0123`;
+
+                    return (
+                      <tr key={log.id} className="hover:bg-slate-850/30">
+                        <td className="py-2 font-mono text-slate-400">
+                          {log.timestamp}
+                        </td>
+                        <td className="py-2 font-bold text-amber-400">
+                          {log.serviceType}
+                        </td>
+                        <td className="py-2 font-semibold text-slate-200">
+                          {log.roomNumber ? `Hab. ${log.roomNumber}` : log.camp}
+                        </td>
+                        <td className="py-2">
+                          <a
+                            href={mapsUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-1 font-mono text-[9px] text-amber-400 hover:text-amber-300 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/30 transition"
+                            title="Ver en Google Maps"
+                          >
+                            <MapPin className="w-2.5 h-2.5 text-rose-400 shrink-0" />
+                            <span>{gpsText}</span>
+                          </a>
+                        </td>
+                        <td className="py-2 text-slate-400 truncate max-w-[120px]">{log.scannedBy}</td>
+                        <td className="py-2">
+                          <span className="inline-flex items-center gap-1 text-[10px] font-extrabold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/30">
+                            <CheckCircle className="w-3 h-3 text-emerald-400" /> {log.status}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

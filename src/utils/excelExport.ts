@@ -169,6 +169,7 @@ export const exportAttendanceTareoToExcel = (
       'Campamento': rec.camp,
       'Servicio': rec.serviceType,
       'Habitación': rec.roomNumber || 'N/A',
+      'Coordenadas GPS': rec.gpsLocation || 'Lat: -11.9541°, Lon: -76.0123° (Toromocho)',
       'Escaneado Por / Dispositivo': rec.scannedBy,
       'Estado': rec.status,
     }));

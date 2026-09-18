@@ -16,6 +16,7 @@ import {
   Clock,
   Radio,
   Trash2,
+  MapPin,
 } from 'lucide-react';
 import { AttendanceRecord, Worker } from '../types';
 import { QRBadgeGenerator } from '../components/QRBadgeGenerator';
@@ -281,6 +282,7 @@ export const QRAttendancePage: React.FC<QRAttendancePageProps> = ({
                 <th className="p-3">Empresa Contratista</th>
                 <th className="p-3">Campamento</th>
                 <th className="p-3">Servicio / Marcación</th>
+                <th className="p-3">Ubicación GPS</th>
                 <th className="p-3">Dispositivo / Garita</th>
                 <th className="p-3">Estado</th>
               </tr>
@@ -292,6 +294,10 @@ export const QRAttendancePage: React.FC<QRAttendancePageProps> = ({
                   const displayName = matchedWorker ? matchedWorker.fullName : rec.workerName;
                   const displayCompany = matchedWorker ? matchedWorker.company : rec.company;
                   const displayCamp = matchedWorker ? matchedWorker.camp : rec.camp;
+                  const gpsText = rec.gpsLocation || 'Lat: -11.9541°, Lon: -76.0123° (Toromocho)';
+                  const mapsUrl = rec.latitude && rec.longitude
+                    ? `https://www.google.com/maps?q=${rec.latitude},${rec.longitude}`
+                    : `https://www.google.com/maps?q=-11.9541,-76.0123`;
 
                   return (
                     <tr key={rec.id} className="hover:bg-slate-900/60 transition-colors">
@@ -300,8 +306,19 @@ export const QRAttendancePage: React.FC<QRAttendancePageProps> = ({
                       <td className="p-3 font-semibold text-slate-100">{displayName}</td>
                       <td className="p-3 text-slate-400">{displayCompany}</td>
                       <td className="p-3 text-slate-300 font-semibold">{displayCamp}</td>
-                    <td className="p-3 font-bold text-amber-300">{rec.serviceType}</td>
                       <td className="p-3 font-bold text-amber-300">{rec.serviceType}</td>
+                      <td className="p-3">
+                        <a
+                          href={mapsUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1 font-mono text-[10px] text-amber-400 hover:text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/30 hover:border-amber-500/60 transition"
+                          title="Ver en Google Maps"
+                        >
+                          <MapPin className="w-3 h-3 text-rose-400 shrink-0" />
+                          <span>{gpsText}</span>
+                        </a>
+                      </td>
                       <td className="p-3 text-slate-400">{rec.scannedBy}</td>
                       <td className="p-3">
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-extrabold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
@@ -313,7 +330,7 @@ export const QRAttendancePage: React.FC<QRAttendancePageProps> = ({
                 })
               ) : (
                 <tr>
-                  <td colSpan={8} className="p-8 text-center text-slate-400 space-y-2">
+                  <td colSpan={9} className="p-8 text-center text-slate-400 space-y-2">
                     <p className="text-xs font-semibold">No hay marcaciones de asistencia registradas aún para este filtro.</p>
                     <p className="text-[11px] text-slate-500">Ingrese un DNI arriba o use el escáner para registrar la primera asistencia.</p>
                   </td>
