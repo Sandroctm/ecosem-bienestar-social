@@ -74,15 +74,9 @@ export const QRAttendancePage: React.FC<QRAttendancePageProps> = ({
     setPendingValidation(null);
   };
 
-  // Extraer dinámicamente todos los campamentos / sedes / lugares ingresados
+  // Extraer dinámicamente ÚNICAMENTE los lugares/campamentos de los trabajadores registrados
   const availableCamps = Array.from(
     new Set([
-      'Sede Morococha - Unidad Toromocho',
-      'Campamento Soledad',
-      'Campamento Diana',
-      'Campamento Central',
-      'Campamento Carhuacoto',
-      'Campamento Tuctu',
       ...workers.map((w) => w.camp).filter(Boolean),
       ...attendanceRecords.map((r) => r.camp).filter(Boolean),
     ])
