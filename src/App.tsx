@@ -422,12 +422,12 @@ export function App() {
 
     if (!gpsLoc) {
       try {
-        const coords = await getDeviceGeolocation();
+        const coords = await getDeviceGeolocation(camp);
         gpsLoc = coords.formatted;
         lat = coords.latitude;
         lng = coords.longitude;
       } catch (e) {
-        gpsLoc = 'Lat: -11.9541°, Lon: -76.0123° (Toromocho)';
+        gpsLoc = `Lat: -11.9541°, Lon: -76.0123° (${camp})`;
         lat = -11.9541;
         lng = -76.0123;
       }

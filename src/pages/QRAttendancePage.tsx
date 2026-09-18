@@ -74,13 +74,33 @@ export const QRAttendancePage: React.FC<QRAttendancePageProps> = ({
     setPendingValidation(null);
   };
 
+  // Extraer dinámicamente todos los campamentos / sedes / lugares ingresados
+  const availableCamps = Array.from(
+    new Set([
+      'Sede Morococha - Unidad Toromocho',
+      'Campamento Soledad',
+      'Campamento Diana',
+      'Campamento Central',
+      'Campamento Carhuacoto',
+      'Campamento Tuctu',
+      ...workers.map((w) => w.camp).filter(Boolean),
+      ...attendanceRecords.map((r) => r.camp).filter(Boolean),
+    ])
+  ).sort();
+
   const filteredRecords = attendanceRecords.filter((rec) => {
+    const matchedWorker = workers.find((w) => w.dni === rec.workerDni);
+    const displayCamp = matchedWorker ? matchedWorker.camp : rec.camp;
     const matchesSearch =
       rec.workerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       rec.workerDni.includes(searchTerm) ||
-      rec.company.toLowerCase().includes(searchTerm.toLowerCase());
+      rec.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      displayCamp.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesService = serviceFilter === 'Todos' || rec.serviceType === serviceFilter;
-    const matchesCamp = campFilter === 'Todos' || rec.camp.toLowerCase().includes(campFilter.toLowerCase());
+    const matchesCamp =
+      campFilter === 'Todos' ||
+      displayCamp === campFilter ||
+      displayCamp.toLowerCase().includes(campFilter.toLowerCase());
     return matchesSearch && matchesService && matchesCamp;
   });
 
@@ -249,13 +269,12 @@ export const QRAttendancePage: React.FC<QRAttendancePageProps> = ({
               onChange={(e) => setCampFilter(e.target.value)}
               className="py-1.5 px-3 text-xs bg-slate-900 border border-slate-800 rounded-lg text-slate-200 font-semibold"
             >
-              <option value="Todos">Todos los Campamentos</option>
-              <option value="Sede Morococha">Sede Morococha - Toromocho</option>
-              <option value="Soledad">Campamento Soledad</option>
-              <option value="Diana">Campamento Diana</option>
-              <option value="Central">Campamento Central</option>
-              <option value="Carhuacoto">Campamento Carhuacoto</option>
-              <option value="Tuctu">Campamento Tuctu</option>
+              <option value="Todos">Todos los Campamentos / Lugares</option>
+              {availableCamps.map((campName) => (
+                <option key={campName} value={campName}>
+                  {campName}
+                </option>
+              ))}
             </select>
 
             <select
