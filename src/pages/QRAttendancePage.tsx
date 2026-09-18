@@ -74,21 +74,27 @@ export const QRAttendancePage: React.FC<QRAttendancePageProps> = ({
     setPendingValidation(null);
   };
 
-  // Extraer dinámicamente ÚNICAMENTE los lugares/campamentos de los trabajadores registrados
+  // Extraer dinámicamente ÚNICAMENTE los lugares/campamentos del personal registrado
   const availableCamps = Array.from(
     new Set([
       ...workers.map((w) => w.camp).filter(Boolean),
-      ...attendanceRecords.map((r) => r.camp).filter(Boolean),
+      ...attendanceRecords.map((r) => {
+        const mw = workers.find((w) => w.dni === r.workerDni);
+        return mw ? mw.camp : r.camp;
+      }).filter(Boolean),
     ])
   ).sort();
 
   const filteredRecords = attendanceRecords.filter((rec) => {
     const matchedWorker = workers.find((w) => w.dni === rec.workerDni);
+    const displayName = matchedWorker ? matchedWorker.fullName : rec.workerName;
+    const displayCompany = matchedWorker ? matchedWorker.company : rec.company;
     const displayCamp = matchedWorker ? matchedWorker.camp : rec.camp;
+
     const matchesSearch =
-      rec.workerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      displayName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       rec.workerDni.includes(searchTerm) ||
-      rec.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      displayCompany.toLowerCase().includes(searchTerm.toLowerCase()) ||
       displayCamp.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesService = serviceFilter === 'Todos' || rec.serviceType === serviceFilter;
     const matchesCamp =

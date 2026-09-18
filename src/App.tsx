@@ -408,13 +408,31 @@ export function App() {
     const dniMatch = cleanInput.match(/\b\d{8}\b/);
     const workerDni = dniMatch ? dniMatch[0] : cleanInput;
 
-    const worker = workers.find(
+    let worker = workers.find(
       (w) => w.dni === workerDni || w.dni === cleanInput || w.qrCodeValue.includes(cleanInput) || w.id === cleanInput
     );
 
-    const workerName = worker ? worker.fullName : (dniMatch || /^\d{8}$/.test(workerDni) ? `Personal DNI ${workerDni}` : workerDni);
-    const company = worker ? worker.company : 'ECOSEM Contratista';
-    const camp = worker ? worker.camp : 'Sede Morococha - Unidad Toromocho';
+    // Si el trabajador no figuraba previamente en el Padrón, registrarlo automáticamente en Personal
+    if (!worker) {
+      const newWorker: Worker = {
+        id: `W-${Date.now().toString(36)}`,
+        dni: workerDni,
+        fullName: dniMatch || /^\d{8}$/.test(workerDni) ? `Personal DNI ${workerDni}` : workerDni,
+        company: 'ECOSEM Contratista',
+        role: 'Operario',
+        camp: 'Sede Morococha - Unidad Toromocho',
+        photoUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=250',
+        phoneWhatsApp: '+51900000000',
+        status: 'Activo',
+        qrCodeValue: `ECOSEM:${workerDni}:REGISTRADO`,
+      };
+      setWorkers((prev) => [newWorker, ...prev]);
+      worker = newWorker;
+    }
+
+    const workerName = worker.fullName;
+    const company = worker.company;
+    const camp = worker.camp;
 
     let gpsLoc = customGps?.gpsLocation;
     let lat = customGps?.latitude;
