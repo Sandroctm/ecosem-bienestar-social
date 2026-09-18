@@ -18,6 +18,8 @@ import {
 import { Worker, AttendanceRecord } from '../types';
 import { getGoogleSheetsWebhookUrl, setGoogleSheetsWebhookUrl } from '../utils/googleSheets';
 
+import { validateAttendanceCheckin, isTodayRecord } from '../utils/attendanceValidationEngine';
+
 interface RoomCheckinPortalProps {
   workers: Worker[];
   onAddAttendance: (workerDni: string, serviceType: 'Almuerzo' | 'Cena' | 'Alojamiento' | 'Ingreso Campamento' | 'Desayuno', roomNumber?: string) => void;
@@ -70,7 +72,7 @@ export const RoomCheckinPortal: React.FC<RoomCheckinPortalProps> = ({
     }
   };
 
-  // Run automatically on mount if query params exist in URL
+  // Run on mount if query params exist in URL: IDENTIFY WORKER ONLY (DO NOT AUTO-MARK!)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const dni = params.get('dni');
@@ -81,18 +83,49 @@ export const RoomCheckinPortal: React.FC<RoomCheckinPortalProps> = ({
     }
 
     if (dni) {
-      setDniInput(dni);
-      handleProcessCheckin(dni, room);
+      const cleanInput = dni.trim();
+      const dniMatch = cleanInput.match(/\b\d{8}\b/);
+      const targetDni = dniMatch ? dniMatch[0] : cleanInput;
+      setDniInput(targetDni);
+
+      const found = workers.find(
+        (w) => w.dni === targetDni || w.dni === cleanInput || w.qrCodeValue.includes(cleanInput) || w.id === cleanInput
+      );
+      if (found) {
+        setScannedWorker(found);
+      }
     }
-  }, []);
+  }, [workers]);
 
-  const handleProcessCheckin = (dniRaw: string, room: string) => {
-    const cleanInput = dniRaw.trim();
-    if (!cleanInput) return;
+  // Determine active DNI and if today's attendance has already been registered
+  const activeDni = scannedWorker ? scannedWorker.dni : (dniInput.trim().match(/\b\d{8}\b/)?.[0] || dniInput.trim());
+  const workerTodayRecord = activeDni
+    ? attendanceRecords.find((rec) => rec.workerDni === activeDni && isTodayRecord(rec.timestamp))
+    : null;
 
-    // Extraer DNI numérico de 8 dígitos (ej: "ECOSEM-W001-45871236" -> "45871236")
+  const handleManualSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const cleanInput = dniInput.trim();
+    if (!cleanInput) {
+      playSound('error');
+      setStatusMsg({ type: 'error', text: 'Debe ingresar un DNI válido de 8 dígitos.' });
+      return;
+    }
+
     const dniMatch = cleanInput.match(/\b\d{8}\b/);
     const targetDni = dniMatch ? dniMatch[0] : cleanInput;
+
+    // Validate 1-mark-per-day constraint & SCTR / Medical leave
+    const validation = validateAttendanceCheckin(targetDni, 'Alojamiento', workers, attendanceRecords);
+
+    if (!validation.allowed) {
+      playSound('error');
+      setStatusMsg({
+        type: 'error',
+        text: validation.message,
+      });
+      return;
+    }
 
     const found = workers.find(
       (w) => w.dni === targetDni || w.dni === cleanInput || w.qrCodeValue.includes(cleanInput) || w.id === cleanInput
@@ -100,35 +133,17 @@ export const RoomCheckinPortal: React.FC<RoomCheckinPortalProps> = ({
 
     if (found) {
       setScannedWorker(found);
-      onAddAttendance(found.dni, 'Alojamiento', room || found.roomNumber);
-      playSound('success');
-      setStatusMsg({
-        type: 'success',
-        text: `¡ENTRADA REGISTRADA EN CELULAR! Marcación exitosa para ${found.fullName} (${found.company}).`,
-      });
-      setTimeout(() => setStatusMsg(null), 5000);
+      onAddAttendance(found.dni, 'Alojamiento', roomInput || found.roomNumber);
     } else {
-      setScannedWorker(null);
-      // Incluso si no está en el padrón, registrar marcación con DNI extraído
-      onAddAttendance(targetDni, 'Alojamiento', room);
-      playSound('success');
-      setStatusMsg({
-        type: 'success',
-        text: `¡MARCACIÓN REGISTRADA! DNI ${targetDni} procesado correctamente.`,
-      });
-      setTimeout(() => setStatusMsg(null), 5000);
+      onAddAttendance(targetDni, 'Alojamiento', roomInput);
     }
-  };
 
-  const handleManualSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!dniInput.trim()) {
-      playSound('error');
-      setStatusMsg({ type: 'error', text: 'Debe ingresar un DNI válido.' });
-      return;
-    }
-    handleProcessCheckin(dniInput, roomInput);
-    setDniInput('');
+    playSound('success');
+    setStatusMsg({
+      type: 'success',
+      text: `¡MARCACIÓN REGISTRADA! Marcación de asistencia exitosa para DNI ${targetDni}.`,
+    });
+    setTimeout(() => setStatusMsg(null), 5000);
   };
 
   const handleSaveSettings = (e: React.FormEvent) => {
@@ -238,6 +253,29 @@ export const RoomCheckinPortal: React.FC<RoomCheckinPortalProps> = ({
           </div>
         )}
 
+        {/* Status indicator for Today's registration */}
+        {workerTodayRecord ? (
+          <div className="bg-emerald-950/60 border border-emerald-500/40 rounded-2xl p-3.5 space-y-1.5">
+            <div className="flex items-center gap-2 text-emerald-300 text-xs font-black">
+              <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0" />
+              <span>ASISTENCIA DE HOY REGISTRADA</span>
+            </div>
+            <p className="text-[10px] text-emerald-400/90 leading-tight">
+              Su marcación diaria fue registrada a las <strong className="font-mono text-emerald-200">{workerTodayRecord.timestamp}</strong>. Solo se permite 1 marcación por día por personal.
+            </p>
+          </div>
+        ) : (
+          <div className="bg-amber-950/30 border border-amber-500/30 rounded-2xl p-3 space-y-1">
+            <div className="flex items-center gap-2 text-amber-300 text-xs font-bold">
+              <Clock className="w-4 h-4 text-amber-400 shrink-0 animate-pulse" />
+              <span>Marcación Pendiente para Hoy</span>
+            </div>
+            <p className="text-[10px] text-slate-400 leading-tight">
+              Verifique su DNI y presione el botón de abajo para registrar su asistencia única de hoy.
+            </p>
+          </div>
+        )}
+
         {/* Manual entry / Input Form */}
         <form onSubmit={handleManualSubmit} className="space-y-4">
           <div className="space-y-3">
@@ -253,17 +291,30 @@ export const RoomCheckinPortal: React.FC<RoomCheckinPortalProps> = ({
                 onChange={(e) => setDniInput(e.target.value)}
                 className="w-full px-3.5 py-3 text-sm bg-slate-950 border-2 border-amber-500/40 rounded-xl text-amber-400 focus:outline-none focus:border-amber-400 font-mono font-bold text-center placeholder-slate-600 tracking-widest text-lg"
                 required
-                autoFocus
               />
             </div>
           </div>
 
           <button
             type="submit"
-            className="w-full py-3 px-4 rounded-xl font-black text-xs uppercase tracking-wider gold-button shadow-lg shadow-amber-500/10 flex items-center justify-center gap-2"
+            disabled={!!workerTodayRecord}
+            className={`w-full py-3.5 px-4 rounded-xl font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-lg ${
+              workerTodayRecord
+                ? 'bg-slate-800 text-slate-400 border border-slate-700 cursor-not-allowed'
+                : 'gold-button shadow-amber-500/10 active:scale-95'
+            }`}
           >
-            <UserCheck className="w-4.5 h-4.5" />
-            Marcar Entrada / Guardar Llegada
+            {workerTodayRecord ? (
+              <>
+                <CheckCircle className="w-4.5 h-4.5 text-emerald-400" />
+                ✓ ASISTENCIA DE HOY YA REGISTRADA
+              </>
+            ) : (
+              <>
+                <UserCheck className="w-4.5 h-4.5" />
+                MARCAR ENTRADA / GUARDAR LLEGADA
+              </>
+            )}
           </button>
         </form>
 
@@ -287,7 +338,7 @@ export const RoomCheckinPortal: React.FC<RoomCheckinPortalProps> = ({
         <div className="bg-slate-950/50 p-3 rounded-xl border border-slate-800/80 text-[10px] text-slate-400 flex items-start gap-2">
           <Info className="w-4 h-4 text-slate-500 shrink-0 mt-0.5" />
           <p>
-            Al escanear un fotocheck de personal con el teléfono, este abrirá automáticamente este portal y registrará el ingreso sin necesidad de pulsar botones.
+            Al abrir este enlace en su celular se identificará su perfil. Presione el botón <strong>"MARCAR ENTRADA"</strong> para registrar su marcado único de asistencia del día.
           </p>
         </div>
       </div>
